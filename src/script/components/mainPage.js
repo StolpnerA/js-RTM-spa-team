@@ -3,6 +3,7 @@ class mainPage {
     if (localStorage.getItem("token")) {
       this.render();
       this.Handlers();
+      this.userInfo();
     } else {
       let code = location.href;
       code = code.split("?");
@@ -20,6 +21,7 @@ class mainPage {
           localStorage.setItem("user", `${data.user_id}`);
           this.render();
           this.Handlers();
+          this.userInfo();
         });
     }
   }
@@ -81,5 +83,34 @@ class mainPage {
       ).then((document.querySelector(".sendMessage").value = ""));
     }
   }
+  userInfo() {
+    let user = localStorage.getItem("user");
+    let token = localStorage.getItem("token");
+    fetch(
+      `https://slack.com/api/users.info?token=${token}&user=${user}&pretty=1`
+    )
+      .then(response => response.json())
+      .then(data => {
+        document.querySelector(".userName").innerHTML = data.user.name;
+      });
+  }
+  // loadhistoryMessage() {
+  //   let token = localStorage.getItem("token");
+  //   let channel = localStorage.getItem("channel");
+  //   fetch(
+  //     `https://slack.com/api/channels.history?token=${token}&channel=${channel}&count=20&pretty=1`
+  //   )
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       console.log(data);
+  //       let fealdMessage = document.querySelector(".workPlace");
+  //       fealdMessage.innerHTML = "";
+  //       let leng = data.messages.length - 1;
+  //       do {
+  //         fealdMessage.innerHTML += data.messages[leng].text + "\r\n";
+  //         leng = leng - 1;
+  //       } while (leng >= 0);
+  //     });
+  // }
 }
 export default mainPage;
