@@ -4,6 +4,7 @@ class mainPage {
       this.render();
       this.Handlers();
       this.userInfo();
+      this.loadhistoryMessage();
     } else {
       let code = location.href;
       code = code.split("?");
@@ -16,12 +17,14 @@ class mainPage {
       )
         .then(response => response.json())
         .then(data => {
+          console.log(data);
           let token = data.access_token;
           localStorage.setItem("token", `${token}`);
           localStorage.setItem("user", `${data.user_id}`);
           this.render();
           this.Handlers();
           this.userInfo();
+          this.loadhistoryMessage();
         });
     }
   }
@@ -94,23 +97,38 @@ class mainPage {
         document.querySelector(".userName").innerHTML = data.user.name;
       });
   }
-  // loadhistoryMessage() {
-  //   let token = localStorage.getItem("token");
-  //   let channel = localStorage.getItem("channel");
-  //   fetch(
-  //     `https://slack.com/api/channels.history?token=${token}&channel=${channel}&count=20&pretty=1`
-  //   )
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       console.log(data);
-  //       let fealdMessage = document.querySelector(".workPlace");
-  //       fealdMessage.innerHTML = "";
-  //       let leng = data.messages.length - 1;
-  //       do {
-  //         fealdMessage.innerHTML += data.messages[leng].text + "\r\n";
-  //         leng = leng - 1;
-  //       } while (leng >= 0);
-  //     });
-  // }
+  loadhistoryMessage() {
+    let token = localStorage.getItem("token");
+    let channel = localStorage.getItem("channel");
+    let img;
+    fetch(
+      "https://slack.com/api/users.info?token=xoxp-217857254422-218064503559-218076003351-7061300063ff067c4fe861b59a19bcba&user=U6E1WETGF&pretty=1"
+    )
+      .then(response => response.json())
+      .then(data => (img = data.user.profile.image_32))
+      .then(
+        fetch(
+          `https://slack.com/api/channels.history?token=${token}&channel=${channel}&count=10&pretty=1`
+        )
+          .then(response => response.json())
+          .then(data => {
+            let fealdMessage = document.querySelector(".workPlace");
+            let leng = data.messages.length - 1;
+            let msg;
+            fealdMessage.innerHTML = "";
+            do {
+              if (localStorage.getItem("user") == data.messages[leng].user) {
+                console.log(msg);
+                msg = data.messages[leng].text;
+                fealdMessage.innerHTML += ` <div class="myMsg">${msg} <img src=${img} width="40" height="40" ></div>`;
+              } else {
+                msg = data.messages[leng].text;
+                fealdMessage.innerHTML += fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${msg}</div>`;
+              }
+              leng = leng - 1;
+            } while (leng >= 0);
+          })
+      );
+  }
 }
 export default mainPage;
