@@ -81,6 +81,7 @@ class mainPage {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
     if (message) {
+      console.log(message);
       fetch(
         `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
       ).then((document.querySelector(".sendMessage").value = ""));
@@ -100,9 +101,10 @@ class mainPage {
   loadhistoryMessage() {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
+    let user = localStorage.getItem("user");
     let img;
     fetch(
-      "https://slack.com/api/users.info?token=xoxp-217857254422-218064503559-218076003351-7061300063ff067c4fe861b59a19bcba&user=U6E1WETGF&pretty=1"
+      `https://slack.com/api/users.info?token=${token}&user=${user}&pretty=1`
     )
       .then(response => response.json())
       .then(data => (img = data.user.profile.image_32))
@@ -115,11 +117,12 @@ class mainPage {
             let fealdMessage = document.querySelector(".workPlace");
             let leng = data.messages.length - 1;
             let msg;
+            let index;
             fealdMessage.innerHTML = "";
             do {
               if (localStorage.getItem("user") == data.messages[leng].user) {
                 msg = data.messages[leng].text;
-                fealdMessage.innerHTML += ` <div class="myMsg">${msg} <img src=${img} width="40" height="40" ></div>`;
+                fealdMessage.innerHTML += ` <div class="myMsg"> ${msg} <img src=${img} width="40" height="40" ></div>`;
               } else {
                 msg = data.messages[leng].text;
                 fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${msg}</div>`;

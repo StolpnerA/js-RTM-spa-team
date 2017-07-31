@@ -58,10 +58,12 @@ a {
 }
 
 .opponentMsg {
+  padding: 15px 0 15px 0;
   text-align: left;
   width: 100%;
 }
 .myMsg {
+  padding: 15px 0 15px 0;
   text-align: end;
   width: 100%;
 }
