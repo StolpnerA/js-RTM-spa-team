@@ -7,6 +7,7 @@ class mainPage {
       this.userInfo();
       this.loadhistoryMessage();
       this.loadUsers();
+      this.channelList();
     } else {
       let code = location.href;
       code = code.split("?");
@@ -27,6 +28,7 @@ class mainPage {
           this.userInfo();
           this.loadhistoryMessage();
           this.loadUsers();
+          this.channelList();
         });
     }
   }
@@ -39,9 +41,13 @@ class mainPage {
         <div class="userInfo">
             <span class="userName">name</span>
         </div>
-        <div class="contacts">
- 
+        <div class = "channels">
+          Channels: 
         </div>
+        <div class="contacts">
+          Contacts: 
+        </div>
+        
     </div>
     <div class="chat">
         <div class="control">
@@ -184,9 +190,28 @@ class mainPage {
           userId = data.members[i].id;
           userName = data.members[i].name;
           img = data.members[i].profile.image_32;
-          placeRender.innerHTML += ` <span class="mdl-chip mdl-chip--contact mdl-chip--deletable ${userId}">
+          placeRender.innerHTML += ` <span class="mdl-chip mdl-chip--contact mdl-chip--deletable user_${userId}">
                 <img class="mdl-chip__contact" src="${img}">
                 <span class="mdl-chip__text">${userName}</span>
+                    </span>`;
+        }
+      });
+  }
+  channelList() {
+    let token = localStorage.getItem("token");
+    let channelId, channelName;
+    let placeRender = document.querySelector(".channels");
+    fetch(`https://slack.com/api/channels.list?token=${token}&pretty=1`)
+      .then(response => response.json())
+      .then(data => {
+        for (let i = 0; i < data.channels.length; i++) {
+          console.log(data.channels[i]);
+          channelId = data.channels[i].id;
+          channelName = data.channels[i].name;
+          placeRender.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId}">
+          <img class="mdl-chip__contact" src="">
+          <span class="mdl-chip__text">${channelName}</span>
+           <button type="button" class="mdl-chip__action"><i class="material-icons myCross">cancel</i></button>
                     </span>`;
         }
       });

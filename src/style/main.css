@@ -41,8 +41,15 @@ a {
   color: #fff;
   margin-bottom: 50px;
 }
-.contacts {
+.contacts,
+.channels {
   color: #bab4d4;
+}
+.myCross {
+  /*ЗДЕСЬ НАДО НАПИСАТЬ СВОЙСТВА КНОПКИ, НА УДАЛЕНИЕ КАНАЛА*/
+}
+.mdl-chip__action {
+  color: #fafafa;
 }
 .mdl-chip {
   width: 100%;
