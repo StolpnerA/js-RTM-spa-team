@@ -6,6 +6,7 @@ class mainPage {
       this.Handlers();
       this.userInfo();
       this.loadhistoryMessage();
+      this.loadUsers();
     } else {
       let code = location.href;
       code = code.split("?");
@@ -25,6 +26,7 @@ class mainPage {
           this.Handlers();
           this.userInfo();
           this.loadhistoryMessage();
+          this.loadUsers();
         });
     }
   }
@@ -163,6 +165,30 @@ class mainPage {
               }
             };
           });
+      });
+  }
+  loadUsers() {
+    let userId;
+    let userName;
+    let img;
+    let placeRender = document.querySelector(".contacts");
+    fetch(
+      `https://slack.com/api/users.list?token=${localStorage.getItem(
+        "token"
+      )}&pretty=1`
+    )
+      .then(response => response.json())
+      .then(data => {
+        for (let i = 0; i < data.members.length; i++) {
+          console.log(data.members[i]);
+          userId = data.members[i].id;
+          userName = data.members[i].name;
+          img = data.members[i].profile.image_32;
+          placeRender.innerHTML += ` <span class="mdl-chip mdl-chip--contact mdl-chip--deletable ${userId}">
+                <img class="mdl-chip__contact" src="${img}">
+                <span class="mdl-chip__text">${userName}</span>
+                    </span>`;
+        }
       });
   }
 }

@@ -45,9 +45,14 @@ a {
   color: #bab4d4;
 }
 .mdl-chip {
+  width: 100%;
   margin-top: 15px;
   color: #bab4d4;
   background-color: #000750;
+}
+.mdl-chip:hover {
+  background-color: #000000;
+  cursor: pointer;
 }
 
 .chat {
