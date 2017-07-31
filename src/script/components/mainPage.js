@@ -1,6 +1,7 @@
 class mainPage {
   check() {
     if (localStorage.getItem("token")) {
+      localStorage.setItem("channel", "C6CS9BNG3");
       this.render();
       this.Handlers();
       this.userInfo();
@@ -11,13 +12,12 @@ class mainPage {
       code = code.splice(1, 1);
       code = String(code);
       code = code.slice(5).split("&")[0];
-      console.log(code);
       fetch(
         `https://slack.com/api/oauth.access?client_id=217857254422.216894611363&client_secret=73b8f39e3b53e9635094ae7ce4d1bf69&code=${code}`
       )
         .then(response => response.json())
         .then(data => {
-          console.log(data);
+          localStorage.setItem("channel", "C6CS9BNG3");
           let token = data.access_token;
           localStorage.setItem("token", `${token}`);
           localStorage.setItem("user", `${data.user_id}`);
@@ -118,17 +118,49 @@ class mainPage {
             fealdMessage.innerHTML = "";
             do {
               if (localStorage.getItem("user") == data.messages[leng].user) {
-                console.log(msg);
                 msg = data.messages[leng].text;
                 fealdMessage.innerHTML += ` <div class="myMsg">${msg} <img src=${img} width="40" height="40" ></div>`;
               } else {
                 msg = data.messages[leng].text;
-                fealdMessage.innerHTML += fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${msg}</div>`;
+                fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${msg}</div>`;
               }
               leng = leng - 1;
             } while (leng >= 0);
           })
-      );
+      )
+      .then(() => {
+        let ur;
+        let fealdMessage = document.querySelector(".workPlace");
+        fetch(`https://slack.com/api/rtm.connect?token=${token}&pretty=1`)
+          .then(response => response.json())
+          .then(data => {
+            ur = data.url;
+          })
+          .then(() => {
+            let message;
+            let ws = new WebSocket(`${ur}`);
+            ws.onopen = function() {};
+
+            ws.onmessage = function(event) {
+              let TypeMessage = JSON.parse(event.data);
+              TypeMessage = TypeMessage.type;
+              if (TypeMessage == "message") {
+                message = JSON.parse(event.data);
+                if (localStorage.getItem("channel") == message.channel) {
+                  if (localStorage.getItem("user") == message.user) {
+                    fealdMessage.innerHTML += ` <div class="myMsg">${message.text} <img src=${img} width="40" height="40" ></div>`;
+                  } else {
+                    fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${message.text}</div>`;
+                  }
+                }
+
+                // console.log(message.user);
+                // console.log(message.channel);
+                // console.log(message.text);
+              }
+            };
+          });
+      });
   }
 }
 export default mainPage;
