@@ -1,0 +1,94 @@
+.signIn {
+  bottom: 0;
+  height: 100px;
+  margin: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 250px;
+  text-decoration: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+.slackIcon {
+  width: 27%;
+  transition: all .5s ease;
+}
+.slackIcon:hover {
+  transform: scale(1.40);
+}
+
+/*######################    mainPage      ##################*/
+
+.conteiner {
+  width: 100%;
+  padding: 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+.infoBox {
+  width: 10%;
+  background-color: #142550;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .3);
+}
+.userInfo {
+  color: #fff;
+  margin-bottom: 50px;
+}
+.contacts,
+.channels {
+  color: #bab4d4;
+}
+.myCross {
+  /*ЗДЕСЬ НАДО НАПИСАТЬ СВОЙСТВА КНОПКИ, НА УДАЛЕНИЕ КАНАЛА*/
+}
+.mdl-chip__action {
+  color: #fafafa;
+}
+.mdl-chip {
+  width: 100%;
+  margin-top: 15px;
+  color: #bab4d4;
+  background-color: #000750;
+}
+.mdl-chip:hover {
+  background-color: #000000;
+  cursor: pointer;
+}
+
+.chat {
+  padding-left: 50px;
+  padding-right: 50px;
+  width: 35%;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, .3);
+}
+.name {
+  padding: 0 40px 20px 40px;
+  font-weight: bold;
+}
+
+.opponentMsg {
+  padding: 15px 0 15px 0;
+  text-align: left;
+  width: 100%;
+}
+.myMsg {
+  padding: 15px 0 15px 0;
+  text-align: end;
+  width: 100%;
+}
+.imgMyMsg {
+  border-radius: 20px;
+}
+.inputMsg {
+  margin-top: 80px;
+}
+.myMdl-textfield {
+  width: 100%;
+}
