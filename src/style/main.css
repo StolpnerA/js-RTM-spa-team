@@ -68,6 +68,10 @@ a {
   width: 35%;
   box-shadow: 4px 4px 10px rgba(0, 0, 0, .3);
 }
+.name {
+  padding: 0 40px 20px 40px;
+  font-weight: bold;
+}
 
 .opponentMsg {
   padding: 15px 0 15px 0;
@@ -78,6 +82,9 @@ a {
   padding: 15px 0 15px 0;
   text-align: end;
   width: 100%;
+}
+.imgMyMsg {
+  border-radius: 20px;
 }
 .inputMsg {
   margin-top: 80px;

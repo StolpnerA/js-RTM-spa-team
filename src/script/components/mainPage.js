@@ -2,12 +2,16 @@ class mainPage {
   check() {
     if (localStorage.getItem("token")) {
       localStorage.setItem("channel", "C6CS9BNG3");
-      this.render();
-      this.Handlers();
-      this.userInfo();
-      this.loadhistoryMessage();
-      this.loadUsers();
-      this.channelList();
+      Promise.resolve()
+        .then(this.render())
+        .then(this.Handlers())
+        .then(this.userInfo())
+        .then(() => {
+          this.loadhistoryMessage();
+        })
+        .then(this.loadUsers())
+        .then(this.channelList())
+        .then(this.wsMsg());
     } else {
       let code = location.href;
       code = code.split("?");
@@ -23,12 +27,14 @@ class mainPage {
           let token = data.access_token;
           localStorage.setItem("token", `${token}`);
           localStorage.setItem("user", `${data.user_id}`);
-          this.render();
-          this.Handlers();
-          this.userInfo();
-          this.loadhistoryMessage();
-          this.loadUsers();
-          this.channelList();
+          Promise.resolve()
+            .then(this.render())
+            .then(this.Handlers())
+            .then(this.userInfo())
+            .then(this.loadhistoryMessage())
+            .then(this.loadUsers())
+            .then(this.channelList())
+            .then(this.wsMsg());
         });
     }
   }
@@ -89,7 +95,6 @@ class mainPage {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
     if (message) {
-      console.log(message);
       fetch(
         `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
       ).then((document.querySelector(".sendMessage").value = ""));
@@ -103,7 +108,8 @@ class mainPage {
     )
       .then(response => response.json())
       .then(data => {
-        document.querySelector(".userName").innerHTML = data.user.name;
+        document.querySelector(".userName").innerHTML = `<img src="${data.user
+          .profile.image_32}"> ${data.user.name}`;
       });
   }
   loadhistoryMessage() {
@@ -111,67 +117,55 @@ class mainPage {
     let channel = localStorage.getItem("channel");
     let user = localStorage.getItem("user");
     let img;
+    let name;
     fetch(
       `https://slack.com/api/users.info?token=${token}&user=${user}&pretty=1`
     )
       .then(response => response.json())
-      .then(data => (img = data.user.profile.image_32))
+      .then(data => {
+        img = data.user.profile.image_32;
+      })
       .then(
         fetch(
           `https://slack.com/api/channels.history?token=${token}&channel=${channel}&count=10&pretty=1`
         )
           .then(response => response.json())
           .then(data => {
-            let fealdMessage = document.querySelector(".workPlace");
-            let leng = data.messages.length - 1;
-            let msg;
-            let index;
-            fealdMessage.innerHTML = "";
-            do {
-              if (localStorage.getItem("user") == data.messages[leng].user) {
-                msg = data.messages[leng].text;
-                fealdMessage.innerHTML += ` <div class="myMsg"> ${msg} <img src=${img} width="40" height="40" ></div>`;
-              } else {
-                msg = data.messages[leng].text;
-                fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${msg}</div>`;
-              }
-              leng = leng - 1;
-            } while (leng >= 0);
-          })
-      )
-      .then(() => {
-        let ur;
-        let fealdMessage = document.querySelector(".workPlace");
-        fetch(`https://slack.com/api/rtm.connect?token=${token}&pretty=1`)
-          .then(response => response.json())
-          .then(data => {
-            ur = data.url;
-          })
-          .then(() => {
-            let message;
-            let ws = new WebSocket(`${ur}`);
-            ws.onopen = function() {};
-
-            ws.onmessage = function(event) {
-              let TypeMessage = JSON.parse(event.data);
-              TypeMessage = TypeMessage.type;
-              if (TypeMessage == "message") {
-                message = JSON.parse(event.data);
-                if (localStorage.getItem("channel") == message.channel) {
-                  if (localStorage.getItem("user") == message.user) {
-                    fealdMessage.innerHTML += ` <div class="myMsg">${message.text} <img src=${img} width="40" height="40" ></div>`;
+            fetch(`https://slack.com/api/users.list?token=${token}&pretty=1`)
+              .then(response => response.json())
+              .then(userInfo => {
+                let fealdMessage = document.querySelector(".workPlace");
+                let leng = data.messages.length - 1;
+                let msg;
+                let index;
+                fealdMessage.innerHTML = "";
+                do {
+                  if (
+                    localStorage.getItem("user") == data.messages[leng].user
+                  ) {
+                    for (let i = 0; i < userInfo.members.length; i++) {
+                      if (
+                        userInfo.members[i].id == localStorage.getItem("user")
+                      ) {
+                        name = userInfo.members[i].name;
+                      }
+                    }
+                    msg = data.messages[leng].text;
+                    fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> ${msg} <img class = "imgMyMsg" src=${img} width="40" height="40"></div>`;
                   } else {
-                    fealdMessage.innerHTML += `<div class="opponentMsg"><img src="slackIcon.png" width="40" height="40"  > ${message.text}</div>`;
+                    for (let i = 0; i < userInfo.members.length; i++) {
+                      if (userInfo.members[i].id == data.messages[leng].user) {
+                        name = userInfo.members[i].name;
+                      }
+                    }
+                    msg = data.messages[leng].text;
+                    fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img src="slackIcon.png" width="40" height="40"  > ${msg}</div>`;
                   }
-                }
-
-                // console.log(message.user);
-                // console.log(message.channel);
-                // console.log(message.text);
-              }
-            };
-          });
-      });
+                  leng = leng - 1;
+                } while (leng >= 0);
+              });
+          })
+      );
   }
   loadUsers() {
     let userId;
@@ -186,7 +180,6 @@ class mainPage {
       .then(response => response.json())
       .then(data => {
         for (let i = 0; i < data.members.length; i++) {
-          console.log(data.members[i]);
           userId = data.members[i].id;
           userName = data.members[i].name;
           img = data.members[i].profile.image_32;
@@ -205,7 +198,6 @@ class mainPage {
       .then(response => response.json())
       .then(data => {
         for (let i = 0; i < data.channels.length; i++) {
-          console.log(data.channels[i]);
           channelId = data.channels[i].id;
           channelName = data.channels[i].name;
           placeRender.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId}">
@@ -214,6 +206,67 @@ class mainPage {
            <button type="button" class="mdl-chip__action"><i class="material-icons myCross">cancel</i></button>
                     </span>`;
         }
+      });
+  }
+  wsMsg() {
+    let ur;
+    let data;
+    let fealdMessage = document.querySelector(".workPlace");
+    let token = localStorage.getItem("token");
+    let img;
+    let user = localStorage.getItem("user");
+    let userName;
+
+    fetch(`https://slack.com/api/rtm.connect?token=${token}&pretty=1`)
+      .then(response => response.json())
+      .then(data => {
+        ur = data.url;
+      })
+      .then(
+        fetch(
+          `https://slack.com/api/users.info?token=${token}&user=${user}&pretty=1`
+        )
+          .then(response => response.json())
+          .then(data => {
+            img = data.user.profile.image_32;
+          })
+      )
+      .then(() => {
+        let message;
+        let ws = new WebSocket(`${ur}`);
+        let name;
+        ws.onopen = function() {};
+        ws.onmessage = function(event) {
+          let TypeMessage = JSON.parse(event.data);
+          TypeMessage = TypeMessage.type;
+          if (TypeMessage == "message") {
+            message = JSON.parse(event.data);
+            if (message.ts == "1501544614.596385") {
+              return;
+            }
+            console.log(1, message);
+            userName = message.user;
+            console.log(1.5, userName);
+            fetch(
+              `https://slack.com/api/users.info?token=${token}&user=${userName}&pretty=1`
+            )
+              .then(response => response.json())
+              .then(data => {
+                name = data.user.name;
+                if (localStorage.getItem("channel") == message.channel) {
+                  if (localStorage.getItem("user") == message.user) {
+                    fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br>${message.text} <img class = "imgMyMsg" src="${img}" width="40" height="40" ></div>`;
+                  } else {
+                    fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><img src="slackIcon.png" width="40" height="40"  > ${message.text}</div>`;
+                  }
+                }
+              });
+
+            // console.log(message.user);
+            // console.log(message.channel);
+            // console.log(message.text);
+          }
+        };
       });
   }
 }
