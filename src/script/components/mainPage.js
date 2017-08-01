@@ -170,7 +170,7 @@ class mainPage {
         let userId;
         let userName;
         let img;
-        let divChannels = document.querySelector(".contacts");
+        let divContacts = document.querySelector(".contacts");
         fetch(
             `https://slack.com/api/users.list?token=${localStorage.getItem(
                 "token"
@@ -182,12 +182,13 @@ class mainPage {
                     userId = data.members[i].id;
                     userName = data.members[i].name;
                     img = data.members[i].profile.image_32;
-                    divChannels.innerHTML += ` <span class="mdl-chip mdl-chip--contact mdl-chip--deletable user_${userId}">
-                <img class="mdl-chip__contact" src="${img}">
-                <span class="mdl-chip__text">${userName}</span>
+                    divContacts.innerHTML += ` <span class="mdl-chip mdl-chip--contact mdl-chip--deletable user_${userId} userName_${userName}">
+                <img class="mdl-chip__contact user_${userId} userName_${userName}" src="${img}">
+                <span class="mdl-chip__text user_${userId} userName_${userName}">${userName}</span>
                     </span>`;
                 }
-            });
+            })
+            .then(() => this.heandlerMsgUsersClick(divContacts))
     }
 
     channelList() {
@@ -271,9 +272,23 @@ class mainPage {
                 localStorage.setItem('channel', className.split('channelName_')[0].slice(0, -1));
                 let nameGroupTag = document.querySelector('.nameGroup');
                 let channelName = className.split('channelName_')[1];
-                nameGroupTag.innerHTML = channelName;
+                nameGroupTag.innerHTML = '# ' + channelName;
                 fetch(`https://slack.com/api/channels.join?token=${localStorage.getItem('token')}&name=${channelName}&pretty=1`)
                     .then(this.loadhistoryMessage())
+            }
+        })
+    }
+    heandlerMsgUsersClick(divContacts) {
+        divContacts.addEventListener('click', (e) => {
+            let target = e.target;
+            if (target.tagName == 'SPAN' || target.tagName == 'IMG') {
+                let className = target.className;
+                className = className.split("user_")[1];
+                localStorage.setItem('channel', className.split('userName_')[0].slice(0, -1));
+                let nameGroupTag = document.querySelector('.nameGroup');
+                let channelName = className.split('userName_')[1];
+                nameGroupTag.innerHTML = '@ ' + channelName;
+                this.loadhistoryMessage();
             }
         })
     }
