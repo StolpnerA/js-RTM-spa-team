@@ -83,7 +83,7 @@ gulp.task('css:build', function () {
         .pipe(reload({stream: true}));
 });
 
-gulp.task('image:build', function () {
+gulp.task('img:build', function () {
     return gulp.src(path.src.img) //Выберем наши картинки
         .pipe(imagemin({ //Сожмем их
             progressive: true,
@@ -105,7 +105,7 @@ gulp.task('build', [
     'html:build',
     'js:build',
     'css:build',
-    // 'img:build',
+    'img:build',
     // 'fonts:build'
 ]);
 
