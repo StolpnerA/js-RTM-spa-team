@@ -42,45 +42,51 @@ class mainPage {
     }
 
     render() {
-        let place = document.querySelector("div");
+        let place = document.querySelector("div.conteiner");
         place.innerHTML = `
-    <div class="conteiner">
-    <div class="infoBox">
-        <div class="userInfo">
-            <span class="userName">name</span>
-        </div>
-        <div class = "channels">
-          Channels: 
-        </div>
-        <div class="contacts">
-          Contacts: 
-        </div>
-        
-    </div>
-    <div class="chat">
-        <div class="control">
-            <span class="nameGroup">nameGroup</span>
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
-                <label class="mdl-button mdl-js-button mdl-button--icon" for="sample6">
-                    <i class="material-icons">search</i>
-                </label>
-                <div class="mdl-textfield__expandable-holder">
-                    <input class="mdl-textfield__input" type="text" id="sample6">
-                    <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
+    <div class="demo-layout-transparent mdl-layout mdl-js-layout">
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">
+                <div class="userInfo">
+                    <span class="userName">name</span>
+                </div>
+            </span>
+            <nav class="mdl-navigation">
+                <div class="infoBox">
+                    <div class = "channels">
+                        Channels: 
+                    </div>
+                    <div class="contacts">
+                        Contacts: 
+                    </div>
+                </div>
+            </nav>
+        </div>    
+        <div class="chat">
+            <div class="control">
+                <span class="nameGroup">nameGroup</span>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+                    <label class="mdl-button mdl-js-button mdl-button--icon" for="sample6">
+                        <i class="material-icons">search</i>
+                    </label>
+                    <div class="mdl-textfield__expandable-holder">
+                        <input class="mdl-textfield__input" type="text" id="sample6">
+                        <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
+                    </div>
+                </div>
+            </div>
+            <div class="workPlace">
+                
+            </div>
+            <div class="inputMsg">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label myMdl-textfield">
+                    <textarea class="mdl-textfield__input sendMessage" type="text" id="sample3" ></textarea>
+                    <label class="mdl-textfield__label" for="sample3">Text...</label>
                 </div>
             </div>
         </div>
-        <div class="workPlace">
-            
-        </div>
-        <div class="inputMsg">
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label myMdl-textfield">
-                <textarea class="mdl-textfield__input sendMessage" type="text" id="sample3" ></textarea>
-                <label class="mdl-textfield__label" for="sample3">Text...</label>
-            </div>
-        </div>
+    <main class="mdl-layout__content"></main>
     </div>
-</div>
      `;
     }
 
@@ -147,7 +153,7 @@ class mainPage {
                                     }
                                 }
                                 msg = data.messages[leng].text;
-                                fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> ${msg} <img class = "myImgCss" src=${img} width="40" height="40"></div>`;
+                                fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${msg}</div> </div>`;
                             } else {
                                 for (let i = 0; i < userInfo.members.length; i++) {
                                     if (userInfo.members[i].id == data.messages[leng].user) {
@@ -156,7 +162,7 @@ class mainPage {
                                     }
                                 }
                                 msg = data.messages[leng].text;
-                                fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss" src="${img}" width="40" height="40"  > ${msg}</div>`;
+                                fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${msg}</div></div>`;
                             }
                             leng = leng - 1;
                         } while (leng >= 0);
@@ -265,9 +271,9 @@ class mainPage {
                                 console.log(event.data);
                                 if (localStorage.getItem("channel") == message.channel) {
                                     if (localStorage.getItem("user") == message.user) {
-                                        fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br>${message.text} <img class = "myImgCss" src="${img}" width="40" height="40" ></div>`;
+                                        fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${message.text}</div> </div>`;
                                     } else {
-                                        fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss" src="${img}" width="40" height="40"  > ${message.text}</div>`;
+                                        fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${message.text}</div></div>`;
                                     }
                                 }
                             });
