@@ -196,13 +196,15 @@ class mainPage {
       .then(response => response.json())
       .then(data => {
         for (let i = 0; i < data.channels.length; i++) {
-          channelId = data.channels[i].id;
-          channelName = data.channels[i].name;
-          divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
+          if (data.channels[i].is_archived == false) {
+            channelId = data.channels[i].id;
+            channelName = data.channels[i].name;
+            divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
           <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="">
           <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
            <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}">cancel</i></button>
                     </span>`;
+          }
         }
       })
       .then(() => this.heandlerChannelsClick(divChannels));
@@ -229,20 +231,29 @@ class mainPage {
         ws.onopen = function() {};
         ws.onmessage = function(event) {
           let TypeMessage = JSON.parse(event.data);
+
+          if (TypeMessage.type == "channel_created") {
+            let channelId = TypeMessage.channel.id;
+            let channelName = TypeMessage.channel.name;
+            let divChannels = document.querySelector(".channels");
+            divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
+          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="">
+          <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
+           <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}">cancel</i></button>
+                    </span>`;
+          }
           TypeMessage = TypeMessage.type;
           if (TypeMessage == "message") {
             message = JSON.parse(event.data);
             if (message.ts == "1501544614.596385") {
               return;
             }
-            console.log(1, message);
             userName = message.user;
             fetch(
               `https://slack.com/api/users.info?token=${token}&user=${userName}&pretty=1`
             )
               .then(response => response.json())
               .then(data => {
-                console.log(data);
                 name = data.user.name;
                 img = data.user.profile.image_32;
                 if (localStorage.getItem("channel") == message.channel) {
