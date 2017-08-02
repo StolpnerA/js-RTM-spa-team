@@ -1,4 +1,5 @@
 class mainPage {
+
   check() {
     if (localStorage.getItem("token")) {
       localStorage.getItem("channel") ||
@@ -38,11 +39,10 @@ class mainPage {
             .then(this.wsMsg());
         });
     }
-  }
 
-  render() {
-    let place = document.querySelector("div");
-    place.innerHTML = `
+    render() {
+        let place = document.querySelector("div");
+        place.innerHTML = `
     <div class="conteiner">
     <div class="infoBox">
         <div class="userInfo">
@@ -378,6 +378,7 @@ class mainPage {
       `https://slack.com/api/channels.create?token=${token}&name=${value}&pretty=1`
     ).then((value = ""));
   }
+
 }
 
 export default mainPage;
