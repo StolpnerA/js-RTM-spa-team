@@ -330,6 +330,13 @@ class mainPage {
       }
     });
   }
+  addNewChannel() {
+    let value;
+    let token = localStorage.getItem("token");
+    fetch(
+      `https://slack.com/api/channels.create?token=${token}&name=${value}&pretty=1`
+    ).then((value = ""));
+  }
 }
 
 export default mainPage;
