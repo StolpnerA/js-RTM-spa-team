@@ -206,6 +206,13 @@ class mainPage {
                     </span>`;
           }
         }
+        let nameGroup = document.querySelector(".nameGroup");
+        console.log(data);
+        for (let i = 0; i < data.channels.length; i++) {
+          if (data.channels[i].id == localStorage.getItem("channel")) {
+            nameGroup.innerHTML = data.channels[i].name_normalized;
+          }
+        }
       })
       .then(() => this.heandlerChannelsClick(divChannels));
   }
@@ -218,7 +225,6 @@ class mainPage {
     let img;
     let user = localStorage.getItem("user");
     let userName;
-
     fetch(`https://slack.com/api/rtm.connect?token=${token}&pretty=1`)
       .then(response => response.json())
       .then(data => {
@@ -231,7 +237,6 @@ class mainPage {
         ws.onopen = function() {};
         ws.onmessage = function(event) {
           let TypeMessage = JSON.parse(event.data);
-
           if (TypeMessage.type == "channel_created") {
             let channelId = TypeMessage.channel.id;
             let channelName = TypeMessage.channel.name;
@@ -286,6 +291,8 @@ class mainPage {
           fetch(
             `https://slack.com/api/channels.leave?token=${token}&channel=${className}&pretty=1`
           )
+            .then(localStorage.setItem("channel", "C6CS9BNG3"))
+            .then(this.loadhistoryMessage())
         );
       }
       if (target.tagName == "SPAN" || target.tagName == "IMG") {
