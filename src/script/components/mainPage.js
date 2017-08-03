@@ -7,9 +7,7 @@ class mainPage {
             fetch(`https://slack.com/api/auth.test?token=${token}&pretty=1`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("1");
                     if (data.ok == false) {
-                        debugger;
                         localStorage.removeItem("token");
                         localStorage.removeItem("channel");
                         localStorage.removeItem("user");
@@ -27,7 +25,6 @@ class mainPage {
                 .then(this.wsMsg())
                 .then(this.exit());
         } else if (!localStorage.getItem("token")) {
-            debugger;
             location.hash = "";
         } else {
             let code = location.href;
@@ -123,6 +120,8 @@ class mainPage {
         let token = localStorage.getItem("token");
         let channel = localStorage.getItem("channel");
         if (message) {
+            message = message.replace(/\&/g, '%26');
+            message = message.replace(/\?/g, '%20%3F');
             fetch(
                 `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
             ).then((document.querySelector(".sendMessage").value = ""));
@@ -164,7 +163,6 @@ class mainPage {
                         if (leng != -1) {
                             do {
                                 var txt = data.messages[leng].text;
-                                console.log(txt);
                                 txt = txt.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
                                 if (localStorage.getItem("user") == data.messages[leng].user) {
                                     for (let i = 0; i < userInfo.members.length; i++) {
@@ -295,6 +293,7 @@ class mainPage {
                         )
                             .then(response => response.json())
                             .then(data => {
+                                if (data.user == undefined) return;
                                 name = data.user.name;
                                 img = data.user.profile.image_32;
                                 let txt = message.text;
