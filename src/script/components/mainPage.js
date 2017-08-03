@@ -232,7 +232,7 @@ class mainPage {
                         channelId = data.channels[i].id;
                         channelName = data.channels[i].name;
                         divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
-          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="">
+          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
           <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
            <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
                     </span>`;
