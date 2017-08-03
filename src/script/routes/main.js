@@ -2,7 +2,7 @@ import mainPage from "../components/mainPage";
 var main = {
   name: "main",
   match: text => text == "main",
-  onBeforeEnter: () => console.log(`onBeforeEnter index`),
+  onBeforeEnter: () => {},
   onEnter: () => {
     let main = new mainPage();
     main.check();

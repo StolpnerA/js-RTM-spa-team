@@ -37,11 +37,7 @@ Router.prototype = {
       });
     }
     var currentParam = this.getParam(newRoute, currentRoute);
-    console.log(`---> router oldURL: ${oldRoute}`);
-    console.log(
-      `---> router findNewActiveRoute: ${newRoute} -- ${(currentRoute || {})
-        .name}`
-    );
+
     Promise.resolve()
       .then(
         () =>
