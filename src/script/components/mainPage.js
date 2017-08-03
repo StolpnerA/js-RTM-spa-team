@@ -54,7 +54,7 @@ class mainPage {
             <nav class="mdl-navigation">
                 <div class="infoBox">
                     <div class = "channels">
-                        Channels: 
+                        Channels:  <i class="material-icons" id="addChannel">add_circle</i>
                     </div>
                     <div class="contacts">
                         Contacts: 
@@ -144,28 +144,30 @@ class mainPage {
                         let msg;
                         let index;
                         fealdMessage.innerHTML = "";
-                        do {
-                            if (localStorage.getItem("user") == data.messages[leng].user) {
-                                for (let i = 0; i < userInfo.members.length; i++) {
-                                    if (userInfo.members[i].id == localStorage.getItem("user")) {
-                                        name = userInfo.members[i].name;
-                                        img = userInfo.members[i].profile.image_32;
+                        if (leng != -1) {
+                            do {
+                                if (localStorage.getItem("user") == data.messages[leng].user) {
+                                    for (let i = 0; i < userInfo.members.length; i++) {
+                                        if (userInfo.members[i].id == localStorage.getItem("user")) {
+                                            name = userInfo.members[i].name;
+                                            img = userInfo.members[i].profile.image_32;
+                                        }
                                     }
-                                }
-                                msg = data.messages[leng].text;
-                                fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${msg}</div> </div>`;
-                            } else {
-                                for (let i = 0; i < userInfo.members.length; i++) {
-                                    if (userInfo.members[i].id == data.messages[leng].user) {
-                                        name = userInfo.members[i].name;
-                                        img = userInfo.members[i].profile.image_32;
+                                    msg = data.messages[leng].text;
+                                    fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${msg}</div> </div>`;
+                                } else {
+                                    for (let i = 0; i < userInfo.members.length; i++) {
+                                        if (userInfo.members[i].id == data.messages[leng].user) {
+                                            name = userInfo.members[i].name;
+                                            img = userInfo.members[i].profile.image_32;
+                                        }
                                     }
+                                    msg = data.messages[leng].text;
+                                    fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${msg}</div></div>`;
                                 }
-                                msg = data.messages[leng].text;
-                                fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${msg}</div></div>`;
-                            }
-                            leng = leng - 1;
-                        } while (leng >= 0);
+                                leng = leng - 1;
+                            } while (leng >= 0);
+                        }
                     });
             });
     }
@@ -209,7 +211,7 @@ class mainPage {
                         divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
           <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="">
           <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
-           <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}">cancel</i></button>
+           <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
                     </span>`;
                     }
                 }
@@ -285,7 +287,10 @@ class mainPage {
     heandlerChannelsClick(divChannels) {
         divChannels.addEventListener("click", e => {
             let target = e.target;
-            if (target.tagName == "I") {
+            if (target.tagName == "I" && target.id == 'addChannel') {
+                this.addNewChannel();
+            }
+            if (target.tagName == "I" && target.id == 'removeChannel') {
                 let className = target.className;
                 let token = localStorage.getItem("token");
                 className = className.split("channel_")[1];
@@ -337,6 +342,7 @@ class mainPage {
                 let nameGroupTag = document.querySelector(".nameGroup");
                 let channelName = className.split("userName_")[1];
                 nameGroupTag.innerHTML = "@ " + channelName;
+
                 fetch(`https://slack.com/api/im.list?token=${token}&pretty=1`)
                     .then(response => response.json())
                     .then(data => {
@@ -345,34 +351,46 @@ class mainPage {
                             if (userId == data.ims[i].user) {
                                 room = data.ims[i].id;
                                 fetch(
-                                    `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
+                                    `https://slack.com/api/im.history?token=${token}&channel=${room}&count=10&pretty=1`
                                 )
                                     .then(response => response.json())
                                     .then(data => {
-                                        console.log(room);
                                         localStorage.setItem("channel", room);
-                                        let leng = data.messages.length;
-                                        leng = leng - 1;
+                                        let leng = data.messages.length - 1;
                                         let placeMsg = document.querySelector(".workPlace");
                                         let text;
-                                        placeMsg.value = "";
-                                        console.log(placeMsg);
-                                        console.log(leng);
-                                        if (leng == -1) {
-                                            placeMsg.value = "";
+                                        let name;
+                                        let img;
+                                        placeMsg.innerHTML = "";
+                                        if (leng != -1) {
+                                            fetch(`https://slack.com/api/users.list?token=${token}&pretty=1`)
+                                                .then(response => response.json())
+                                                .then(userInfo => {
+                                                    do {
+                                                        text = data.messages[leng].text;
+                                                        if (
+                                                            localStorage.getItem("user") == data.messages[leng].user
+                                                        ) {
+                                                            for (let i = 0; i < userInfo.members.length; i++) {
+                                                                if (userInfo.members[i].id == localStorage.getItem("user")) {
+                                                                    name = userInfo.members[i].name;
+                                                                    img = userInfo.members[i].profile.image_32;
+                                                                }
+                                                            }
+                                                            placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
+                                                        } else {
+                                                            for (let i = 0; i < userInfo.members.length; i++) {
+                                                                if (userInfo.members[i].id == data.messages[leng].user) {
+                                                                    name = userInfo.members[i].name;
+                                                                    img = userInfo.members[i].profile.image_32;
+                                                                }
+                                                            }
+                                                            placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                                                        }
+                                                        leng = leng - 1;
+                                                    } while (leng >= 0);
+                                                })
                                         }
-                                        do {
-                                            text = data.messages[leng].text;
-                                            if (
-                                                localStorage.getItem("user") == data.messages[leng].user
-                                            ) {
-                                                placeMsg.innerHTML += ` <div class="myMsg"><span class="name"></span><br>${text} <img class = "myImgCss" src="" width="40" height="40" ></div>`;
-                                            } else {
-                                                placeMsg.innerHTML += `<div class="opponentMsg"><span class="name"></span><br><img class = "myImgCss" src="" width="40" height="40"  > ${text}</div>`;
-                                            }
-
-                                            leng = leng - 1;
-                                        } while (leng >= 0);
                                     });
                             }
                         }
@@ -382,8 +400,9 @@ class mainPage {
     }
 
     addNewChannel() {
-        let value;
+        let value = prompt("Введите название комнаты");
         let token = localStorage.getItem("token");
+        if (!value) return;
         fetch(
             `https://slack.com/api/channels.create?token=${token}&name=${value}&pretty=1`
         ).then((value = ""));

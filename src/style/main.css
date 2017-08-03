@@ -31,6 +31,10 @@ a {
   /*flex-direction: row;*/
   /*justify-content: center;*/
 /*}*/
+.material-icons {
+  font-size: 18px;
+  cursor: pointer;
+}
 .mdl-layout__drawer {
   border: none;
   background-color: #142550;
