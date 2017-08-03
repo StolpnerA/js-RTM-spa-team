@@ -7,7 +7,9 @@ class mainPage {
       fetch(`https://slack.com/api/auth.test?token=${token}&pretty=1`)
         .then(response => response.json())
         .then(data => {
+          console.log("1");
           if (data.ok == false) {
+            debugger;
             localStorage.removeItem("token");
             localStorage.removeItem("channel");
             localStorage.removeItem("user");
@@ -23,6 +25,9 @@ class mainPage {
         .then(this.loadUsers())
         .then(this.channelList())
         .then(this.wsMsg());
+    } else if (!localStorage.getItem("token")) {
+      debugger;
+      location.hash = "";
     } else {
       let code = location.href;
       code = code.split("?");
@@ -58,6 +63,7 @@ class mainPage {
             <span class="mdl-layout-title">
                 <div class="userInfo">
                     <span class="userName">name</span>
+                    <button class="exit">Выход</button>
                 </div>
             </span>
             <nav class="mdl-navigation">
@@ -256,6 +262,10 @@ class mainPage {
         ws.onopen = function() {};
         ws.onmessage = function(event) {
           let TypeMessage = JSON.parse(event.data);
+          if (TypeMessage.type == "channel_archive") {
+            let channel = TypeMessage.channel;
+            document.querySelector(`.channel_${channel}`).remove();
+          }
           if (TypeMessage.type == "channel_created") {
             let channelId = TypeMessage.channel.id;
             let channelName = TypeMessage.channel.name;
@@ -280,8 +290,6 @@ class mainPage {
               .then(data => {
                 name = data.user.name;
                 img = data.user.profile.image_32;
-                console.log(event.data);
-                console.log(message.text);
                 if (localStorage.getItem("channel") == message.channel) {
                   if (localStorage.getItem("user") == message.user) {
                     fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${message.text}</div> </div>`;
@@ -305,9 +313,9 @@ class mainPage {
         let className = target.className;
         let token = localStorage.getItem("token");
         className = className.split("channel_")[1];
-        let del = document
-          .querySelectorAll(`.channel_${className}`)[0]
-          .remove();
+        // let del = document
+        //   .querySelectorAll(`.channel_${className}`)[0]
+        //   .remove();
 
         fetch(
           `https://slack.com/api/channels.archive?token=${token}&channel=${className}&pretty=1`

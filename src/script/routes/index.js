@@ -2,7 +2,7 @@ import indexPage from "../components/indexPage";
 var index = {
   name: "index",
   match: "",
-  onBeforeEnter: () => console.log(`onBeforeEnter index`),
+  onBeforeEnter: () => {},
   onEnter: () => {
     if (localStorage.getItem("token")) {
       location.hash = "main";
