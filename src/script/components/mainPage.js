@@ -145,21 +145,22 @@ class mainPage {
         let token = localStorage.getItem("token");
         let channel = localStorage.getItem("channel");
         let user = localStorage.getItem("user");
+        let fialdMessage = document.querySelector(".workPlace");
         let img;
         let name;
         fetch(
-            `https://slack.com/api/channels.history?token=${token}&channel=${channel}&count=10&pretty=1`
+            `https://slack.com/api/channels.history?token=${token}&channel=${channel}&pretty=1`
         )
             .then(response => response.json())
             .then(data => {
                 fetch(`https://slack.com/api/users.list?token=${token}&pretty=1`)
                     .then(response => response.json())
                     .then(userInfo => {
-                        let fealdMessage = document.querySelector(".workPlace");
+
                         let leng = data.messages.length - 1;
                         let msg;
                         let index;
-                        fealdMessage.innerHTML = "";
+                        fialdMessage.innerHTML = "";
                         if (leng != -1) {
                             do {
                                 var txt = data.messages[leng].text;
@@ -175,7 +176,7 @@ class mainPage {
                                     }
                                     msg = data.messages[leng].text;
 
-                                    fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+                                    fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
                                 } else {
                                     for (let i = 0; i < userInfo.members.length; i++) {
                                         if (userInfo.members[i].id == data.messages[leng].user) {
@@ -184,13 +185,14 @@ class mainPage {
                                         }
                                     }
                                     msg = data.messages[leng].text;
-                                    fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                                    fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                                 }
                                 leng = leng - 1;
                             } while (leng >= 0);
+                            fialdMessage.scrollTop = fialdMessage.scrollHeight;
                         }
-                    });
-            });
+                    })
+            })
     }
 
     loadUsers() {
@@ -249,7 +251,7 @@ class mainPage {
     wsMsg() {
         let ur;
         let data;
-        let fealdMessage = document.querySelector(".workPlace");
+        let fialdMessage = document.querySelector(".workPlace");
         let token = localStorage.getItem("token");
         let img;
         let user = localStorage.getItem("user");
@@ -300,10 +302,11 @@ class mainPage {
                                 txt = txt.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
                                 if (localStorage.getItem("channel") == message.channel) {
                                     if (localStorage.getItem("user") == message.user) {
-                                        fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
+                                        fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
                                     } else {
-                                        fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                                     }
+                                    fialdMessage.scrollTop = fialdMessage.scrollHeight;
                                 }
                             });
                     }
@@ -378,7 +381,7 @@ class mainPage {
                             if (userId == data.ims[i].user) {
                                 room = data.ims[i].id;
                                 fetch(
-                                    `https://slack.com/api/im.history?token=${token}&channel=${room}&count=10&pretty=1`
+                                    `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
                                 )
                                     .then(response => response.json())
                                     .then(data => {
@@ -433,6 +436,7 @@ class mainPage {
                                                         }
                                                         leng = leng - 1;
                                                     } while (leng >= 0);
+                                                    placeMsg.scrollTop = placeMsg.scrollHeight;
                                                 });
                                         }
                                     });

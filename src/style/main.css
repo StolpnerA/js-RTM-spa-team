@@ -108,6 +108,11 @@ a {
   width: 100%;
 }
 
+.workPlace {
+  max-height: 500px;
+  overflow-y: scroll;
+}
+
 .demo-layout-transparent .mdl-layout__header,
 .demo-layout-transparent .mdl-layout__drawer-button {
   /* This background is dark, so we set text to white. Use 87% black instead if
