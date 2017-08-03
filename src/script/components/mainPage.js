@@ -24,7 +24,8 @@ class mainPage {
         })
         .then(this.loadUsers())
         .then(this.channelList())
-        .then(this.wsMsg());
+        .then(this.wsMsg())
+        .then(this.exit());
     } else if (!localStorage.getItem("token")) {
       debugger;
       location.hash = "";
@@ -50,7 +51,8 @@ class mainPage {
             .then(this.loadhistoryMessage())
             .then(this.loadUsers())
             .then(this.channelList())
-            .then(this.wsMsg());
+            .then(this.wsMsg())
+            .then(this.exit());
         });
     }
   }
@@ -442,6 +444,14 @@ class mainPage {
     fetch(
       `https://slack.com/api/channels.create?token=${token}&name=${value}&pretty=1`
     );
+  }
+  exit() {
+    document.querySelector(".exit").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("channel");
+      localStorage.removeItem("user");
+      location.hash = "";
+    });
   }
 }
 
