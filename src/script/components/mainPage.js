@@ -7,9 +7,7 @@ class mainPage {
             fetch(`https://slack.com/api/auth.test?token=${token}&pretty=1`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("1");
                     if (data.ok == false) {
-                        debugger;
                         localStorage.removeItem("token");
                         localStorage.removeItem("channel");
                         localStorage.removeItem("user");
@@ -20,15 +18,73 @@ class mainPage {
                 .then(this.Handlers())
                 .then(this.userInfo())
                 .then(() => {
-                    this.loadhistoryMessage();
+                    let choosingRoom = localStorage.getItem("channel");
+                    choosingRoom = choosingRoom.split("");
+                    if (choosingRoom[0] == "D") {
+                        let room = choosingRoom.join("");
+                        let token = localStorage.getItem("token");
+
+                        fetch(
+                            `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
+                        )
+                            .then(response => response.json())
+                            .then(data => {
+                                localStorage.setItem("channel", room);
+                                let leng = data.messages.length - 1;
+                                let placeMsg = document.querySelector(".workPlace");
+                                let text;
+                                let name;
+                                let img;
+                                placeMsg.innerHTML = "";
+                                if (leng != -1) {
+                                    fetch(
+                                        `https://slack.com/api/users.list?token=${token}&pretty=1`
+                                    )
+                                        .then(response => response.json())
+                                        .then(userInfo => {
+                                            do {
+                                                text = data.messages[leng].text;
+                                                if (
+                                                    localStorage.getItem("user") ==
+                                                    data.messages[leng].user
+                                                ) {
+                                                    for (let i = 0; i < userInfo.members.length; i++) {
+                                                        if (
+                                                            userInfo.members[i].id ==
+                                                            localStorage.getItem("user")
+                                                        ) {
+                                                            name = userInfo.members[i].name;
+                                                            img = userInfo.members[i].profile.image_32;
+                                                        }
+                                                    }
+                                                    placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
+                                                } else {
+                                                    for (let i = 0; i < userInfo.members.length; i++) {
+                                                        if (
+                                                            userInfo.members[i].id == data.messages[leng].user
+                                                        ) {
+                                                            name = userInfo.members[i].name;
+                                                            img = userInfo.members[i].profile.image_32;
+                                                        }
+                                                    }
+                                                    placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                                                    document.querySelector(".nameGroup").innerHTML =
+                                                        "@" + name;
+                                                }
+                                                leng = leng - 1;
+                                            } while (leng >= 0);
+                                            placeMsg.scrollTop = placeMsg.scrollHeight;
+                                        });
+                                }
+                            });
+                    } else if (choosingRoom[0] == "C") {
+                        this.loadhistoryMessage();
+                    }
                 })
                 .then(this.loadUsers())
                 .then(this.channelList())
                 .then(this.wsMsg())
                 .then(this.exit());
-        } else if (!localStorage.getItem("token")) {
-            debugger;
-            location.hash = "";
         } else {
             let code = location.href;
             code = code.split("?");
@@ -65,7 +121,7 @@ class mainPage {
             <span class="mdl-layout-title">
                 <div class="userInfo">
                     <span class="userName">name</span>
-                    <button class="exit">Выход</button>
+                    <i class="material-icons exit">exit_to_app</i>
                 </div>
             </span>
             <nav class="mdl-navigation">
@@ -123,6 +179,8 @@ class mainPage {
         let token = localStorage.getItem("token");
         let channel = localStorage.getItem("channel");
         if (message) {
+            message = message.replace(/\&/g, "%26");
+            message = message.replace(/\?/g, "%20%3F");
             fetch(
                 `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
             ).then((document.querySelector(".sendMessage").value = ""));
@@ -146,23 +204,28 @@ class mainPage {
         let token = localStorage.getItem("token");
         let channel = localStorage.getItem("channel");
         let user = localStorage.getItem("user");
+        let fialdMessage = document.querySelector(".workPlace");
         let img;
         let name;
         fetch(
-            `https://slack.com/api/channels.history?token=${token}&channel=${channel}&count=10&pretty=1`
+            `https://slack.com/api/channels.history?token=${token}&channel=${channel}&pretty=1`
         )
             .then(response => response.json())
             .then(data => {
                 fetch(`https://slack.com/api/users.list?token=${token}&pretty=1`)
                     .then(response => response.json())
                     .then(userInfo => {
-                        let fealdMessage = document.querySelector(".workPlace");
                         let leng = data.messages.length - 1;
                         let msg;
                         let index;
-                        fealdMessage.innerHTML = "";
+                        fialdMessage.innerHTML = "";
                         if (leng != -1) {
                             do {
+                                var txt = data.messages[leng].text;
+                                txt = txt.replace(
+                                    /<(http.+?)>/g,
+                                    '<a href="$1" target="_blank">$1</a>'
+                                );
                                 if (localStorage.getItem("user") == data.messages[leng].user) {
                                     for (let i = 0; i < userInfo.members.length; i++) {
                                         if (
@@ -173,7 +236,8 @@ class mainPage {
                                         }
                                     }
                                     msg = data.messages[leng].text;
-                                    fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${msg}</div> </div>`;
+
+                                    fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
                                 } else {
                                     for (let i = 0; i < userInfo.members.length; i++) {
                                         if (userInfo.members[i].id == data.messages[leng].user) {
@@ -182,10 +246,11 @@ class mainPage {
                                         }
                                     }
                                     msg = data.messages[leng].text;
-                                    fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${msg}</div></div>`;
+                                    fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                                 }
                                 leng = leng - 1;
                             } while (leng >= 0);
+                            fialdMessage.scrollTop = fialdMessage.scrollHeight;
                         }
                     });
             });
@@ -228,7 +293,7 @@ class mainPage {
                         channelId = data.channels[i].id;
                         channelName = data.channels[i].name;
                         divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
-          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="">
+          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
           <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
            <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
                     </span>`;
@@ -247,7 +312,7 @@ class mainPage {
     wsMsg() {
         let ur;
         let data;
-        let fealdMessage = document.querySelector(".workPlace");
+        let fialdMessage = document.querySelector(".workPlace");
         let token = localStorage.getItem("token");
         let img;
         let user = localStorage.getItem("user");
@@ -282,7 +347,10 @@ class mainPage {
                     TypeMessage = TypeMessage.type;
                     if (TypeMessage == "message") {
                         message = JSON.parse(event.data);
-                        if (message.ts == "1501544614.596385") {
+                        if (
+                            message.ts == "1501544614.596385" ||
+                            message.ts == "1501796123.395835"
+                        ) {
                             return;
                         }
                         userName = message.user;
@@ -291,14 +359,21 @@ class mainPage {
                         )
                             .then(response => response.json())
                             .then(data => {
+                                if (data.user == undefined) return;
                                 name = data.user.name;
                                 img = data.user.profile.image_32;
+                                let txt = message.text;
+                                txt = txt.replace(
+                                    /<(http.+?)>/g,
+                                    '<a href="$1" target="_blank">$1</a>'
+                                );
                                 if (localStorage.getItem("channel") == message.channel) {
                                     if (localStorage.getItem("user") == message.user) {
-                                        fealdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${message.text}</div> </div>`;
+                                        fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
                                     } else {
-                                        fealdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${message.text}</div></div>`;
+                                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                                     }
+                                    fialdMessage.scrollTop = fialdMessage.scrollHeight;
                                 }
                             });
                     }
@@ -364,7 +439,6 @@ class mainPage {
                 let nameGroupTag = document.querySelector(".nameGroup");
                 let channelName = className.split("userName_")[1];
                 nameGroupTag.innerHTML = "@ " + channelName;
-
                 fetch(`https://slack.com/api/im.list?token=${token}&pretty=1`)
                     .then(response => response.json())
                     .then(data => {
@@ -373,7 +447,7 @@ class mainPage {
                             if (userId == data.ims[i].user) {
                                 room = data.ims[i].id;
                                 fetch(
-                                    `https://slack.com/api/im.history?token=${token}&channel=${room}&count=10&pretty=1`
+                                    `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
                                 )
                                     .then(response => response.json())
                                     .then(data => {
@@ -428,6 +502,7 @@ class mainPage {
                                                         }
                                                         leng = leng - 1;
                                                     } while (leng >= 0);
+                                                    placeMsg.scrollTop = placeMsg.scrollHeight;
                                                 });
                                         }
                                     });
@@ -435,7 +510,16 @@ class mainPage {
                         }
                     });
             }
-        });
+        })
+    }
+
+    addNewChannel() {
+        let value = prompt("Введите название комнаты");
+        let token = localStorage.getItem("token");
+        if (!value) return;
+        fetch(
+            `https://slack.com/api/channels.create?token=${token}&name=${value}&pretty=1`
+        );
     }
 
     addNewChannel() {
@@ -456,5 +540,6 @@ class mainPage {
         });
     }
 }
+
 
 export default mainPage;
