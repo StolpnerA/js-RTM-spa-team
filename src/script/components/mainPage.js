@@ -69,7 +69,7 @@ class mainPage {
                           }
                           placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
                           document.querySelector(".nameGroup").innerHTML =
-                            "@_" + name;
+                            "@" + name;
                         }
                         leng = leng - 1;
                       } while (leng >= 0);
