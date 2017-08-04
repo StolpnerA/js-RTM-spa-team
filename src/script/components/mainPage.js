@@ -24,8 +24,6 @@ class mainPage {
                 .then(this.channelList())
                 .then(this.wsMsg())
                 .then(this.exit());
-        } else if (!localStorage.getItem("token")) {
-            location.hash = "";
         } else {
             let code = location.href;
             code = code.split("?");
