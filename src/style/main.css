@@ -1,3 +1,7 @@
+.conteiner {
+  width: 100%;
+}
+
 .signIn {
   bottom: 0;
   height: 100px;
@@ -10,8 +14,10 @@
   text-decoration: none;
 }
 
+
 a {
   text-decoration: none;
+  word-break: break-all;
 }
 
 .slackIcon {
@@ -31,6 +37,7 @@ a {
   /*flex-direction: row;*/
   /*justify-content: center;*/
 /*}*/
+
 .material-icons {
   font-size: 18px;
   cursor: pointer;
@@ -104,14 +111,63 @@ a {
 .inputMsg {
   margin-top: 10px;
 }
+.menuChat {
+  font-size: 47px;
+  cursor: pointer;
+  float: left;
+  padding: 20px 5px 0 0;
+  color: #142550;
+}
+.menuChat:hover {
+  color: #000000;
+}
 .myMdl-textfield {
-  width: 100%;
+  width: 92%;
 }
 
 .workPlace {
   max-height: 500px;
   overflow-y: scroll;
 }
+
+.mdl-dialog {
+  border: none;
+  box-shadow: 0 9px 46px 8px rgba(0, 0, 0, 0.14), 0 11px 15px -7px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.2);
+  width: 280px; }
+.mdl-dialog__title {
+  padding: 24px 24px 0;
+  margin: 0;
+  font-size: 1.5rem; }
+.mdl-dialog__actions {
+  padding: 8px 8px 8px 24px;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: row-reverse;
+  -ms-flex-direction: row-reverse;
+  flex-direction: row-reverse;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap; }
+.mdl-dialog__actions > * {
+  margin-right: 8px;
+  height: 36px; }
+.mdl-dialog__actions > *:first-child {
+  margin-right: 0; }
+.mdl-dialog__actions--full-width {
+  padding: 0 0 8px 0; }
+.mdl-dialog__actions--full-width > * {
+  height: 48px;
+  -webkit-flex: 0 0 100%;
+  -ms-flex: 0 0 100%;
+  flex: 0 0 100%;
+  padding-right: 16px;
+  margin-right: 0;
+  text-align: right; }
+.mdl-dialog__content {
+  padding: 20px 24px 24px 24px;
+  color: rgba(0,0,0, 0.54); }
+
 
 .demo-layout-transparent .mdl-layout__header,
 .demo-layout-transparent .mdl-layout__drawer-button {
