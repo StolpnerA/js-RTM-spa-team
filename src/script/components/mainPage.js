@@ -81,12 +81,12 @@ class mainPage {
                         this.loadhistoryMessage();
                     }
                 })
-                .then(this.loadUsers())
-                .then(this.channelList())
-                .then(this.wsMsg())
-                .then(this.exit())
-                .then(this.HandlerMenuChatBtn())
-                .then(this.GetYandexMap())
+                .then(()=>this.loadUsers())
+                .then(()=>this.channelList())
+                .then(()=>this.wsMsg())
+                .then(()=>this.exit())
+                .then(()=>this.HandlerMenuChatBtn())
+                .then(()=>this.GetYandexMap())
         } else {
             let code = location.href;
             code = code.split("?");
@@ -205,16 +205,23 @@ class mainPage {
         });
     }
 
-    sendMessage() {
-        let message = document.querySelector(".sendMessage").value;
+    sendMessage(coords) {
         let user = localStorage.getItem("user");
         let token = localStorage.getItem("token");
         let channel = localStorage.getItem("channel");
-        if (message) {
-            message = message.replace(/\&/g, "%26");
-            message = message.replace(/\?/g, "%20%3F");
+        if (!coords) {
+            let message = document.querySelector(".sendMessage").value;
+            if (message) {
+                message = message.replace(/\&/g, "%26");
+                message = message.replace(/\?/g, "%20%3F");
+                fetch(
+                    `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
+                ).then((document.querySelector(".sendMessage").value = ""));
+            }
+        }
+        else {
             fetch(
-                `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
+                `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${coords}&as_user=${user}&username=${user}&pretty=1`
             ).then((document.querySelector(".sendMessage").value = ""));
         }
     }
@@ -611,36 +618,46 @@ class mainPage {
     }
 
     GetYandexMap() {
-        ymaps.ready(init);
+        ymaps.ready(init.bind(this));
         var myMap;
 
         function init() {
             myMap = new ymaps.Map("map", {
 
-            center: [53.902236, 27.561840], // Minsk
-                zoom: 11
+                center: [53.902236, 27.561840], // Minsk
+                zoom: 11,
+                controls: ['zoomControl', 'searchControl', 'typeSelector', 'geolocationControl']
             }, {
-                balloonMaxWidth: 200,
+                balloonMaxWidth: 150,
                 searchControlProvider: 'yandex#search'
+            });
+
+            document.querySelector('#map').addEventListener('click', (ev) => {
+                if(!ev.target.matches('.sendCoords')) return;
+                /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
+                if(myMap.balloon && myMap.balloon.onSendCoordsClick) {
+                    myMap.balloon.onSendCoordsClick();
+                }
             });
 
             /**
              * Processing events that occur when the user
              * left-clicks anywhere on the map.
-             * When such an event occurs, we open the balloon.
+             * When such an event occurs, we open the balloon
+             *
              */
-            myMap.events.add('click', function (e) {
+            myMap.events.add('click',  (e) => {
                 if (!myMap.balloon.isOpen()) {
                     var coords = e.get('coords');
                     myMap.balloon.open(coords, {
-                        contentHeader: 'Event!',
-                        contentBody: '<p>Someone clicked on the map.</p>' +
-                        '<p>Click coordinates: ' + [
+                        contentHeader: 'Event',
+                        contentBody: '<p>Data to send.</p>' +
+                        '<p>This coordinates: ' + [
                             coords[0].toPrecision(6),
                             coords[1].toPrecision(6)
-                        ].join(', ') + '</p>',
-                        contentFooter: '<sup>Click again</sup>'
+                        ].join(', ') + '</p>' + `<button class="sendCoords">Send this coordinates</button>`
                     });
+                    myMap.balloon.onSendCoordsClick = () => this.sendMessage(coords);
                 }
                 else {
                     myMap.balloon.close();
