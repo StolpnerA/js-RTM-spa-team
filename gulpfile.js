@@ -30,7 +30,7 @@ var path = {
   },
   watch: {
     html: "src/**/*.html",
-    js: "src/js/**/*.js",
+    js: "src/script/**/*.js",
     css: "src/style/**/*.css",
     img: "src/img/**/*.*",
     fonts: "src/fonts/**/*.*"
@@ -40,7 +40,7 @@ var path = {
 
 var config = {
   server: {
-    baseDir: "./dist"
+    baseDir: "./build"
   },
   open: false,
   tunnel: false,
