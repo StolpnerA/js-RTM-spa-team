@@ -17,7 +17,6 @@ class mainPage {
                 .then(this.render())
                 .then(this.Handlers())
                 .then(this.userInfo())
-                .then(this.GetYandexMap())
                 .then(() => {
                     let choosingRoom = localStorage.getItem("channel");
                     choosingRoom = choosingRoom.split("");
@@ -75,7 +74,7 @@ class mainPage {
                                                 leng = leng - 1;
                                             } while (leng >= 0);
                                             placeMsg.scrollTop = placeMsg.scrollHeight;
-                                        });
+                                        })
                                 }
                             });
                     } else if (choosingRoom[0] == "C") {
@@ -87,6 +86,7 @@ class mainPage {
                 .then(this.wsMsg())
                 .then(this.exit())
                 .then(this.HandlerMenuChatBtn())
+                .then(this.GetYandexMap())
         } else {
             let code = location.href;
             code = code.split("?");
@@ -112,6 +112,7 @@ class mainPage {
                         .then(this.wsMsg())
                         .then(this.exit())
                         .then(this.HandlerMenuChatBtn())
+                        .then(this.GetYandexMap())
                 });
         }
     }
@@ -184,8 +185,8 @@ class mainPage {
      </dialog>
      <dialog id="dialogForSetMap" class="mdl-dialog">
         <h3 class="mdl-dialog__title">Menu</h3>
-        <div class="mdl-dialog__content">
-           
+        <div class="mdl-dialog__content myCssForMap">
+           <div id="map"></div>
         </div>
         <div class="mdl-dialog__actions">
             <button type="button" class="mdl-button">Close</button>
@@ -578,49 +579,45 @@ class mainPage {
 
     HandlerMenuChatBtn() {
         let btn = document.querySelector('.menuChat');
+        let dialogInfoChat = document.querySelector('#dialogForChat');
+        if (!dialogInfoChat.showModal) {
+            dialogPolyfill.registerDialog(dialogInfoChat);
+        }
         btn.addEventListener('click', () => {
-            let dialogInfoChat = document.querySelector('#dialogForChat');
-            if (!dialogInfoChat.showModal) {
-                dialogPolyfill.registerDialog(dialogInfoChat);
-            }
-            else {
-                dialogInfoChat.showModal();
-                let location = dialogInfoChat.querySelector('.location');
-                location.addEventListener('click', () => {
-                    this.GetLocation();
-                })
-            }
-            dialogInfoChat.querySelector('button:not([disabled])')
-                .addEventListener('click', function () {
-                    dialogInfoChat.close();
-                });
-        })
+            dialogInfoChat.showModal();
+            let location = dialogInfoChat.querySelector('.location');
+            location.addEventListener('click', () => {
+                this.GetLocation();
+                dialogInfoChat.close();
+            });
+        });
+        dialogInfoChat.querySelector('button:not([disabled])')
+            .addEventListener('click', () => {
+                dialogInfoChat.close();
+            });
     }
 
-    GetLocation () {
+    GetLocation() {
         let dialogForSetMap = document.querySelector('#dialogForSetMap');
         if (!dialogForSetMap.showModal) {
             dialogPolyfill.registerDialog(dialogForSetMap);
         }
-        else {
-            dialogForSetMap.showModal();
-            //this.GetYandexMap();
-
-        }
+        dialogForSetMap.showModal();
         dialogForSetMap.querySelector('button:not([disabled])')
-            .addEventListener('click', function () {
+            .addEventListener('click', () => {
                 dialogForSetMap.close();
             });
 
     }
 
-    GetYandexMap () {
+    GetYandexMap() {
         ymaps.ready(init);
         var myMap;
 
-        function init () {
+        function init() {
             myMap = new ymaps.Map("map", {
-                center: [57.5262, 38.3061], // Uglich
+
+            center: [53.902236, 27.561840], // Minsk
                 zoom: 11
             }, {
                 balloonMaxWidth: 200,
@@ -636,13 +633,13 @@ class mainPage {
                 if (!myMap.balloon.isOpen()) {
                     var coords = e.get('coords');
                     myMap.balloon.open(coords, {
-                        contentHeader:'Event!',
-                        contentBody:'<p>Someone clicked on the map.</p>' +
+                        contentHeader: 'Event!',
+                        contentBody: '<p>Someone clicked on the map.</p>' +
                         '<p>Click coordinates: ' + [
                             coords[0].toPrecision(6),
                             coords[1].toPrecision(6)
                         ].join(', ') + '</p>',
-                        contentFooter:'<sup>Click again</sup>'
+                        contentFooter: '<sup>Click again</sup>'
                     });
                 }
                 else {
