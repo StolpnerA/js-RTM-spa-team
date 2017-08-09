@@ -81,12 +81,12 @@ class mainPage {
                         this.loadhistoryMessage();
                     }
                 })
-                .then(()=>this.loadUsers())
-                .then(()=>this.channelList())
-                .then(()=>this.wsMsg())
-                .then(()=>this.exit())
-                .then(()=>this.HandlerMenuChatBtn())
-                .then(()=>this.GetYandexMap())
+                .then(() => this.loadUsers())
+                .then(() => this.channelList())
+                .then(() => this.wsMsg())
+                .then(() => this.exit())
+                .then(() => this.HandlerMenuChatBtn())
+                .then(() => this.GetYandexMap())
         } else {
             let code = location.href;
             code = code.split("?");
@@ -220,6 +220,7 @@ class mainPage {
             }
         }
         else {
+            coords = `<map> ${coords}`;
             fetch(
                 `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${coords}&as_user=${user}&username=${user}&pretty=1`
             ).then((document.querySelector(".sendMessage").value = ""));
@@ -255,8 +256,6 @@ class mainPage {
                     .then(response => response.json())
                     .then(userInfo => {
                         let leng = data.messages.length - 1;
-                        let msg;
-                        let index;
                         fialdMessage.innerHTML = "";
                         if (leng != -1) {
                             do {
@@ -265,6 +264,16 @@ class mainPage {
                                     /<(http.+?)>/g,
                                     '<a href="$1" target="_blank">$1</a>'
                                 );
+
+                                if (txt.indexOf('&lt;map&gt;') == 0) {
+                                    txt = txt.split('&lt;map&gt;');
+                                    txt = txt.splice(1, 11).join(',');
+                                    txt = txt.split(',');
+                                    txt.push(leng);
+                                    let div = `<div id="mapSend${leng}" style="width: 200px; height: 200px"></div>`;
+                                    fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
+                                    this.sendCoords(txt);
+                                }
                                 if (localStorage.getItem("user") == data.messages[leng].user) {
                                     for (let i = 0; i < userInfo.members.length; i++) {
                                         if (
@@ -274,8 +283,6 @@ class mainPage {
                                             img = userInfo.members[i].profile.image_32;
                                         }
                                     }
-                                    msg = data.messages[leng].text;
-
                                     fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
                                 } else {
                                     for (let i = 0; i < userInfo.members.length; i++) {
@@ -284,7 +291,6 @@ class mainPage {
                                             img = userInfo.members[i].profile.image_32;
                                         }
                                     }
-                                    msg = data.messages[leng].text;
                                     fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                                 }
                                 leng = leng - 1;
@@ -633,9 +639,9 @@ class mainPage {
             });
 
             document.querySelector('#map').addEventListener('click', (ev) => {
-                if(!ev.target.matches('.sendCoords')) return;
+                if (!ev.target.matches('.sendCoords')) return;
                 /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
-                if(myMap.balloon && myMap.balloon.onSendCoordsClick) {
+                if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
                     myMap.balloon.onSendCoordsClick();
                 }
             });
@@ -646,7 +652,7 @@ class mainPage {
              * When such an event occurs, we open the balloon
              *
              */
-            myMap.events.add('click',  (e) => {
+            myMap.events.add('click', (e) => {
                 if (!myMap.balloon.isOpen()) {
                     var coords = e.get('coords');
                     myMap.balloon.open(coords, {
@@ -678,6 +684,25 @@ class mainPage {
             myMap.events.add('balloonopen', function (e) {
                 myMap.hint.close();
             });
+        }
+    }
+
+    sendCoords(coords) {
+        ymaps.ready(init);
+        var myMap, myPlacemark;
+
+        function init() {
+            myMap = new ymaps.Map(`mapSend${coords[2]}`, {
+                center: [coords[0], coords[1]],
+                zoom: 7,
+                controls: []
+            });
+
+            myPlacemark = new ymaps.Placemark([coords[0], coords[1]], {
+                balloonContent: "Я тут!"
+            });
+
+            myMap.geoObjects.add(myPlacemark);
         }
     }
 }
