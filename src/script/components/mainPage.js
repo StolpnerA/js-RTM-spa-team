@@ -81,10 +81,14 @@ class mainPage {
             this.loadhistoryMessage();
           }
         })
-        .then(this.loadUsers())
-        .then(this.channelList())
-        .then(this.wsMsg())
-        .then(this.exit());
+
+        .then(() => this.loadUsers())
+        .then(() => this.channelList())
+        .then(() => this.wsMsg())
+        .then(() => this.exit())
+        .then(() => this.HandlerMenuChatBtn())
+        .then(() => this.GetYandexMap());
+
     } else {
       let code = location.href;
       code = code.split("?");
@@ -108,7 +112,10 @@ class mainPage {
             .then(this.loadUsers())
             .then(this.channelList())
             .then(this.wsMsg())
-            .then(this.exit());
+            .then(this.exit())
+            .then(this.HandlerMenuChatBtn())
+            .then(this.GetYandexMap());
+
         });
     }
   }
@@ -127,7 +134,7 @@ class mainPage {
             <nav class="mdl-navigation">
                 <div class="infoBox">
                     <div class = "channels">
-                        Channels:  <i class="material-icons" id="addChannel">add_circle</i>
+                        Channels:  <i class="material-icons dialog-button" id="addChannel">add_circle</i>
                     </div>
                     <div class="contacts">
                         Contacts: 
@@ -152,7 +159,7 @@ class mainPage {
                 
             </div>
             <div class="inputMsg">
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label myMdl-textfield">
+                <i class="material-icons menuChat">add_box</i><div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label myMdl-textfield">
                     <textarea class="mdl-textfield__input sendMessage" type="text" id="sample3" ></textarea>
                     <label class="mdl-textfield__label" for="sample3">Text...</label>
                 </div>
@@ -160,6 +167,34 @@ class mainPage {
         </div>
     <main class="mdl-layout__content"></main>
     </div>
+    <dialog id="dialogForNewChannel" class="mdl-dialog">
+        <h3 class="mdl-dialog__title">Create new channel</h3>
+        <div class="mdl-dialog__content">
+            <input class="nameChannel" type="text" placeholder="Enter name channel">
+        </div>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="mdl-button">Close</button>
+            <button type="button" class="mdl-button accept">Accept</button>
+        </div>
+     </dialog>
+     <dialog id="dialogForChat" class="mdl-dialog">
+        <h3 class="mdl-dialog__title">Menu</h3>
+        <div class="mdl-dialog__content">
+            <i class="material-icons location">my_location</i>
+        </div>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="mdl-button">Close</button>
+        </div>
+     </dialog>
+     <dialog id="dialogForSetMap" class="mdl-dialog">
+        <h3 class="mdl-dialog__title">Menu</h3>
+        <div class="mdl-dialog__content myCssForMap">
+           <div id="map"></div>
+        </div>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="mdl-button">Close</button>
+        </div>
+     </dialog>
      `;
   }
 
@@ -173,20 +208,27 @@ class mainPage {
     });
   }
 
-  sendMessage() {
-    let message = document.querySelector(".sendMessage").value;
+  sendMessage(coords) {
     let user = localStorage.getItem("user");
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    if (message) {
-      message = message.replace(/\&/g, "%26");
-      message = message.replace(/\?/g, "%20%3F");
+    if (!coords) {
+      let message = document.querySelector(".sendMessage").value;
+      if (message) {
+        message = message.replace(/\&/g, "%26");
+        message = message.replace(/\?/g, "%20%3F");
+        fetch(
+          `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
+        ).then((document.querySelector(".sendMessage").value = ""));
+      }
+    } else {
+      coords = `<map> ${coords}`;
       fetch(
-        `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
+        `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${coords}&as_user=${user}&username=${user}&pretty=1`
+
       ).then((document.querySelector(".sendMessage").value = ""));
     }
   }
-
   userInfo() {
     let user = localStorage.getItem("user");
     let token = localStorage.getItem("token");
@@ -216,8 +258,7 @@ class mainPage {
           .then(response => response.json())
           .then(userInfo => {
             let leng = data.messages.length - 1;
-            let msg;
-            let index;
+
             fialdMessage.innerHTML = "";
             if (leng != -1) {
               do {
@@ -226,27 +267,39 @@ class mainPage {
                   /<(http.+?)>/g,
                   '<a href="$1" target="_blank">$1</a>'
                 );
-                if (localStorage.getItem("user") == data.messages[leng].user) {
-                  for (let i = 0; i < userInfo.members.length; i++) {
-                    if (
-                      userInfo.members[i].id == localStorage.getItem("user")
-                    ) {
-                      name = userInfo.members[i].name;
-                      img = userInfo.members[i].profile.image_32;
-                    }
-                  }
-                  msg = data.messages[leng].text;
 
-                  fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+
+                if (txt.indexOf("&lt;map&gt;") == 0) {
+                  txt = txt.split("&lt;map&gt;");
+                  txt = txt.splice(1, 11).join(",");
+                  txt = txt.split(",");
+                  txt.push(leng);
+                  let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
+                  fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
+                  this.sendCoords(txt);
                 } else {
-                  for (let i = 0; i < userInfo.members.length; i++) {
-                    if (userInfo.members[i].id == data.messages[leng].user) {
-                      name = userInfo.members[i].name;
-                      img = userInfo.members[i].profile.image_32;
+                  if (
+                    localStorage.getItem("user") == data.messages[leng].user
+                  ) {
+                    for (let i = 0; i < userInfo.members.length; i++) {
+                      if (
+                        userInfo.members[i].id == localStorage.getItem("user")
+                      ) {
+                        name = userInfo.members[i].name;
+                        img = userInfo.members[i].profile.image_32;
+                      }
                     }
+                    fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+                  } else {
+                    for (let i = 0; i < userInfo.members.length; i++) {
+                      if (userInfo.members[i].id == data.messages[leng].user) {
+                        name = userInfo.members[i].name;
+                        img = userInfo.members[i].profile.image_32;
+                      }
+                    }
+                    fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                   }
-                  msg = data.messages[leng].text;
-                  fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+  fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                 }
                 leng = leng - 1;
               } while (leng >= 0);
@@ -326,6 +379,9 @@ class mainPage {
         let message;
         let ws = new WebSocket(`${ur}`);
         let name;
+
+        let globalThis = this;
+
         ws.onopen = function() {};
         ws.onmessage = function(event) {
           let TypeMessage = JSON.parse(event.data);
@@ -338,7 +394,8 @@ class mainPage {
             let channelName = TypeMessage.channel.name;
             let divChannels = document.querySelector(".channels");
             divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
-          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="">
+
+          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
           <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
            <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
                     </span>`;
@@ -366,13 +423,25 @@ class mainPage {
                   /<(http.+?)>/g,
                   '<a href="$1" target="_blank">$1</a>'
                 );
-                if (localStorage.getItem("channel") == message.channel) {
-                  if (localStorage.getItem("user") == message.user) {
-                    fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
-                  } else {
-                    fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+
+                if (txt.indexOf("&lt;map&gt;") == 0) {
+                  txt = txt.split("&lt;map&gt;");
+                  txt = txt.splice(1, 11).join(",");
+                  txt = txt.split(",");
+                  txt.push(message.ts);
+                  let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
+                  fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
+                  globalThis.sendCoords(txt);
+                } else {
+                  if (localStorage.getItem("channel") == message.channel) {
+                    if (localStorage.getItem("user") == message.user) {
+                      fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
+                    } else {
+                      fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                    }
+                    fialdMessage.scrollTop = fialdMessage.scrollHeight;
                   }
-                  fialdMessage.scrollTop = fialdMessage.scrollHeight;
+
                 }
               });
           }
@@ -438,7 +507,6 @@ class mainPage {
         let nameGroupTag = document.querySelector(".nameGroup");
         let channelName = className.split("userName_")[1];
         nameGroupTag.innerHTML = "@ " + channelName;
-
         fetch(`https://slack.com/api/im.list?token=${token}&pretty=1`)
           .then(response => response.json())
           .then(data => {
@@ -513,13 +581,27 @@ class mainPage {
     });
   }
 
+
   addNewChannel() {
-    let value = prompt("Введите название комнаты");
-    let token = localStorage.getItem("token");
-    if (!value) return;
-    fetch(
-      `https://slack.com/api/channels.create?token=${token}&name=${value}&pretty=1`
-    );
+    let dialog = document.querySelector("#dialogForNewChannel");
+    if (!dialog.showModal) {
+      dialogPolyfill.registerDialog(dialog);
+    } else dialog.showModal();
+    dialog
+      .querySelector("button:not([disabled])")
+      .addEventListener("click", () => {
+        dialog.close();
+      });
+    let acceptButton = dialog.querySelector(".accept");
+    acceptButton.addEventListener("click", () => {
+      let nameChannel = dialog.querySelector(".nameChannel");
+      nameChannel = nameChannel.value;
+      let token = localStorage.getItem("token");
+      if (!nameChannel) return;
+      fetch(
+        `https://slack.com/api/channels.create?token=${token}&name=${nameChannel}&pretty=1`
+      ).then(() => dialog.close());
+    });
   }
 
   exit() {
@@ -529,6 +611,132 @@ class mainPage {
       localStorage.removeItem("user");
       location.hash = "";
     });
+  }
+
+  HandlerMenuChatBtn() {
+    let btn = document.querySelector(".menuChat");
+    let dialogInfoChat = document.querySelector("#dialogForChat");
+    if (!dialogInfoChat.showModal) {
+      dialogPolyfill.registerDialog(dialogInfoChat);
+    }
+    btn.addEventListener("click", () => {
+      dialogInfoChat.showModal();
+      let location = dialogInfoChat.querySelector(".location");
+      location.addEventListener("click", () => {
+        this.GetLocation();
+        dialogInfoChat.close();
+      });
+    });
+    dialogInfoChat
+      .querySelector("button:not([disabled])")
+      .addEventListener("click", () => {
+        dialogInfoChat.close();
+      });
+  }
+
+  GetLocation() {
+    let dialogForSetMap = document.querySelector("#dialogForSetMap");
+    if (!dialogForSetMap.showModal) {
+      dialogPolyfill.registerDialog(dialogForSetMap);
+    }
+    dialogForSetMap.showModal();
+    dialogForSetMap
+      .querySelector("button:not([disabled])")
+      .addEventListener("click", () => {
+        dialogForSetMap.close();
+      });
+  }
+
+  GetYandexMap() {
+    ymaps.ready(init.bind(this));
+    var myMap;
+
+    function init() {
+      myMap = new ymaps.Map(
+        "map",
+        {
+          center: [53.902236, 27.56184], // Minsk
+          zoom: 11,
+          controls: [
+            "zoomControl",
+            "searchControl",
+            "typeSelector",
+            "geolocationControl"
+          ]
+        },
+        {
+          balloonMaxWidth: 150,
+          searchControlProvider: "yandex#search"
+        }
+      );
+
+      document.querySelector("#map").addEventListener("click", ev => {
+        if (!ev.target.matches(".sendCoords")) return;
+        /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
+        if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
+          myMap.balloon.onSendCoordsClick();
+        }
+      });
+
+      /**
+             * Processing events that occur when the user
+             * left-clicks anywhere on the map.
+             * When such an event occurs, we open the balloon
+             *
+             */
+      myMap.events.add("click", e => {
+        if (!myMap.balloon.isOpen()) {
+          var coords = e.get("coords");
+          myMap.balloon.open(coords, {
+            contentHeader: "Event",
+            contentBody:
+              "<p>Data to send.</p>" +
+              "<p>This coordinates: " +
+              [coords[0].toPrecision(6), coords[1].toPrecision(6)].join(", ") +
+              "</p>" +
+              `<button class="sendCoords">Send this coordinates</button>`
+          });
+          myMap.balloon.onSendCoordsClick = () => this.sendMessage(coords);
+        } else {
+          myMap.balloon.close();
+        }
+      });
+
+      /**
+             * Processing events that occur when the user
+             * right-clicks anywhere on the map.
+             * When such an event occurs, we display a popup hint
+             * at the point of click.
+             */
+      myMap.events.add("contextmenu", function(e) {
+        myMap.hint.open(e.get("coords"), "Someone right-clicked");
+      });
+
+      // Hiding the hint when opening the balloon.
+      myMap.events.add("balloonopen", function(e) {
+        myMap.hint.close();
+      });
+    }
+  }
+
+  sendCoords(coords) {
+    ymaps.ready(init);
+    var myMap, myPlacemark;
+
+    function init() {
+      myMap = new ymaps.Map(`mapSend${coords[2]}`, {
+        center: [coords[0], coords[1]],
+        zoom: 7,
+        controls: []
+      });
+
+      myPlacemark = new ymaps.Placemark([coords[0], coords[1]], {
+        balloonContent: "Я тут!"
+      });
+
+      myMap.geoObjects.add(myPlacemark);
+    }
+
   }
 }
 
