@@ -362,6 +362,7 @@ class mainPage {
     let fialdMessage = document.querySelector(".workPlace");
     let token = localStorage.getItem("token");
     let img;
+    let sound = document.querySelector("#audio");
     let user = localStorage.getItem("user");
     let userName;
     fetch(`https://slack.com/api/rtm.connect?token=${token}&pretty=1`)
@@ -400,6 +401,7 @@ class mainPage {
             ) {
               return;
             }
+
             userName = message.user;
             fetch(
               `https://slack.com/api/users.info?token=${token}&user=${userName}&pretty=1`
@@ -414,6 +416,7 @@ class mainPage {
                   /<(http.+?)>/g,
                   '<a href="$1" target="_blank">$1</a>'
                 );
+
                 if (txt.indexOf("&lt;map&gt;") == 0) {
                   txt = txt.split("&lt;map&gt;");
                   txt = txt.splice(1, 11).join(",");
@@ -427,7 +430,12 @@ class mainPage {
                     if (localStorage.getItem("user") == message.user) {
                       fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
                     } else {
+                      sound.play();
                       fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+
+                      setTimeout(() => {
+                        sound.pause();
+                      }, 825);
                     }
                     fialdMessage.scrollTop = fialdMessage.scrollHeight;
                   }
