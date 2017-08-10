@@ -1,38 +1,38 @@
 .conteiner {
-    width: 100%;
+  width: 100%;
 }
 
 #map {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 .signIn {
-    bottom: 0;
-    height: 100px;
-    margin: auto;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 250px;
-    text-decoration: none;
+  bottom: 0;
+  height: 100px;
+  margin: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 250px;
+  text-decoration: none;
 }
 
 a {
-    text-decoration: none;
-    word-break: break-all;
+  text-decoration: none;
+  word-break: break-all;
 }
 
 .slackIcon {
-    width: 27%;
-    transition: all .5s ease;
+  width: 27%;
+  transition: all .5s ease;
 }
 
 .slackIcon:hover {
-    transform: scale(1.40);
+  transform: scale(1.40);
 }
 
 /*######################    mainPage      ##################*/
@@ -46,200 +46,202 @@ a {
 /*}*/
 
 .material-icons {
-    font-size: 18px;
-    cursor: pointer;
+  font-size: 18px;
+  cursor: pointer;
 }
 
 .mdl-layout__drawer {
-    border: none;
-    background-color: #142550;
+  border: none;
+  background-color: #142550;
 }
 
 .mdl-layout__drawer .mdl-navigation {
-    padding: 0;
+  padding: 0;
 }
 
 .infoBox {
-    padding: 0 10px;
+  padding: 0 10px;
 }
 
 .userInfo {
-    color: #fff;
+  color: #fff;
 }
 
 .contacts,
 .channels {
-    color: #bab4d4;
-    padding-bottom: 16px;
+  color: #bab4d4;
+  padding-bottom: 16px;
 }
 
 .myCross {
-    /*ЗДЕСЬ НАДО НАПИСАТЬ СВОЙСТВА КНОПКИ, НА УДАЛЕНИЕ КАНАЛА*/
+  /*ЗДЕСЬ НАДО НАПИСАТЬ СВОЙСТВА КНОПКИ, НА УДАЛЕНИЕ КАНАЛА*/
 }
 
 .mdl-chip__action {
-    color: #fafafa;
+  color: #fafafa;
 }
 
 .mdl-chip {
-    width: 100%;
-    margin-top: 15px;
-    color: #bab4d4;
-    background-color: #000750;
+  width: 100%;
+  margin-top: 15px;
+  color: #bab4d4;
+  background-color: #000750;
 }
 
 .mdl-chip:hover {
-    background-color: #000000;
-    cursor: pointer;
+  background-color: #000000;
+  cursor: pointer;
 }
 
 .chat {
-    margin: 0 auto;
-    padding-left: 50px;
-    padding-right: 50px;
-    width: 35%;
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, .3);
+  margin: 0 auto;
+  padding-left: 50px;
+  padding-right: 50px;
+  width: 35%;
+  height: 95%;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, .3);
 }
 
 .name {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .msg {
-    padding: 0 60px;
+  padding: 0 60px;
 }
 
 .myMsgImg {
-    float: right;
+  float: right;
 }
 
 .opponentMsgImg {
-    float: left;
+  float: left;
 }
 
 .opponentMsg {
-    padding: 15px 0 15px 0;
-    text-align: left;
-    width: 100%;
+  padding: 15px 0 15px 0;
+  text-align: left;
+  width: 100%;
 }
 
 .myMsg {
-    padding: 15px 0 15px 0;
-    text-align: end;
-    width: 100%;
+  padding: 15px 0 15px 0;
+  text-align: end;
+  width: 100%;
 }
 
 .myImgCss {
-    border-radius: 20px;
+  border-radius: 20px;
 }
 
 .inputMsg {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .menuChat {
-    font-size: 47px;
-    cursor: pointer;
-    float: left;
-    padding: 20px 5px 0 0;
-    color: #142550;
+  font-size: 47px;
+  cursor: pointer;
+  float: left;
+  padding: 20px 5px 0 0;
+  color: #142550;
 }
 
 .menuChat:hover {
-    color: #000000;
+  color: #000000;
 }
 
 .myMdl-textfield {
-    width: 92%;
+  width: 92%;
 }
 
 .workPlace {
-    max-height: 500px;
-    overflow-y: scroll;
+  max-height: 80%;
+  overflow-y: scroll;
 }
 
 #dialogForSetMap {
-    width: 50%;
-    height: 60%;
+  width: 50%;
+  height: 60%;
 }
 .myCssForMap {
-    margin: 0 auto;
-    padding: 0 !important;
-    width: calc(100% - 48px);
-    height: calc(100% - 92px);
+  margin: 0 auto;
+  padding: 0 !important;
+  width: calc(100% - 48px);
+  height: calc(100% - 92px);
 }
 div#map {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .mdl-dialog {
-    border: none;
-    box-shadow: 0 9px 46px 8px rgba(0, 0, 0, 0.14), 0 11px 15px -7px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.2);
-    width: 280px;
+  border: none;
+  box-shadow: 0 9px 46px 8px rgba(0, 0, 0, 0.14),
+    0 11px 15px -7px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.2);
+  width: 280px;
 }
 
 .mdl-dialog__title {
-    padding: 0 24px 0;
-    margin: 0;
-    font-size: 1.5rem;
+  padding: 0 24px 0;
+  margin: 0;
+  font-size: 1.5rem;
 }
 
 .mdl-dialog__actions {
-    padding: 8px 8px 8px 24px;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-flex-direction: row-reverse;
-    -ms-flex-direction: row-reverse;
-    flex-direction: row-reverse;
-    -webkit-flex-wrap: wrap;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
+  padding: 8px 8px 8px 24px;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: row-reverse;
+  -ms-flex-direction: row-reverse;
+  flex-direction: row-reverse;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 
 .mdl-dialog__actions > * {
-    margin-right: 8px;
-    height: 36px;
+  margin-right: 8px;
+  height: 36px;
 }
 
 .mdl-dialog__actions > *:first-child {
-    margin-right: 0;
+  margin-right: 0;
 }
 
 .mdl-dialog__actions--full-width {
-    padding: 0 0 8px 0;
+  padding: 0 0 8px 0;
 }
 
 .mdl-dialog__actions--full-width > * {
-    height: 48px;
-    -webkit-flex: 0 0 100%;
-    -ms-flex: 0 0 100%;
-    flex: 0 0 100%;
-    padding-right: 16px;
-    margin-right: 0;
-    text-align: right;
+  height: 48px;
+  -webkit-flex: 0 0 100%;
+  -ms-flex: 0 0 100%;
+  flex: 0 0 100%;
+  padding-right: 16px;
+  margin-right: 0;
+  text-align: right;
 }
 
 .mdl-dialog__content {
-    padding: 20px 24px 24px 24px;
-    color: rgba(0, 0, 0, 0.54);
+  padding: 20px 24px 24px 24px;
+  color: rgba(0, 0, 0, 0.54);
 }
 
 .demo-layout-transparent .mdl-layout__header,
 .demo-layout-transparent .mdl-layout__drawer-button {
-    /* This background is dark, so we set text to white. Use 87% black instead if
+  /* This background is dark, so we set text to white. Use 87% black instead if
        your background is light. */
-    color: #000750;
+  color: #000750;
 }
 
 @media all and (max-width: 700px) {
-    .chat {
-        width: 100%;
-        padding: 0;
-    }
+  .chat {
+    width: 100%;
+    padding: 0;
+  }
 
-    .control {
-        padding-left: 50px;
-    }
+  .control {
+    padding-left: 50px;
+  }
 }
