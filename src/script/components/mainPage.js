@@ -177,7 +177,12 @@ class mainPage {
      <dialog id="dialogForChat" class="mdl-dialog">
         <h3 class="mdl-dialog__title">Menu</h3>
         <div class="mdl-dialog__content">
-            <i class="material-icons location">my_location</i>
+            <i class="material-icons location">my_location</i> <br>
+          
+            
+            <form id="myform" method="POST" enctype="multipart/form-data">
+            <i class="material-icons attachFile">attach_file</i><input type="file" name="leToUpload" id="file-select">
+        </form>
         </div>
         <div class="mdl-dialog__actions">
             <button type="button" class="mdl-button">Close</button>
@@ -450,7 +455,7 @@ class mainPage {
                     if (localStorage.getItem("user") == message.user) {
                       let sendImg = message.file;
                       if (sendImg != undefined) {
-                        if (message.file.thumb_360 != undefined) {
+                        if (sendImg.thumb_360 != undefined) {
                           sendImg = sendImg.thumb_360;
                           fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
                         }
@@ -461,7 +466,7 @@ class mainPage {
                       sound.play();
                       let sendImg = message.file;
                       if (sendImg != undefined) {
-                        if (message.file.thumb_360 != undefined) {
+                        if (sendImg.thumb_360 != undefined) {
                           sendImg = sendImg.thumb_360;
                           fialdMessage.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
                         } else {
@@ -656,8 +661,13 @@ class mainPage {
     btn.addEventListener("click", () => {
       dialogInfoChat.showModal();
       let location = dialogInfoChat.querySelector(".location");
+      let senFile = dialogInfoChat.querySelector("#file-select");
       location.addEventListener("click", () => {
         this.GetLocation();
+        dialogInfoChat.close();
+      });
+      senFile.addEventListener("click", () => {
+        this.attachFile();
         dialogInfoChat.close();
       });
     });
@@ -770,6 +780,39 @@ class mainPage {
 
       myMap.geoObjects.add(myPlacemark);
     }
+  }
+
+  attachFile() {
+    let token = localStorage.getItem("token");
+    let channel = localStorage.getItem("channel");
+    var form = document.getElementById("myform");
+    var fileSelect = document.getElementById("file-select");
+
+    fileSelect.addEventListener("change", () => {
+      // form.onsubmit = function(event) {
+      //   event.preventDefault();
+      // Update button text.
+      //uploadButton.innerText = "Uploading...";
+      var file = fileSelect.files[0];
+      var formData = new FormData();
+      formData.append("file", file, file.name);
+      formData.append("token", `${token}`);
+      formData.append("channels", `${channel}`);
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "https://slack.com/api/files.upload", true);
+
+      // Set up a handler for when the request finishes.
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          // File(s) uploaded.
+          //uploadButton.innerText = "Uploaded";
+        } else {
+          alert("An error occurred!");
+        }
+      };
+      xhr.send(formData);
+      //};
+    });
   }
 }
 

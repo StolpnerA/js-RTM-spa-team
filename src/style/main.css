@@ -223,6 +223,9 @@ div#map {
   text-align: right;
 }
 
+#file-select {
+  width: 280px;
+}
 .mdl-dialog__content {
   padding: 20px 24px 24px 24px;
   color: rgba(0, 0, 0, 0.54);
