@@ -226,7 +226,7 @@ div#map {
   pointer-events: none;
 }
 #file-select {
-  left: 35px;
+  left: 34px;
   position: absolute;
   width: 210px;
   opacity: 0;
