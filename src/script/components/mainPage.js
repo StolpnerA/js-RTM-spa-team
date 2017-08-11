@@ -257,8 +257,10 @@ class mainPage {
             let leng = data.messages.length - 1;
             fialdMessage.innerHTML = "";
             if (leng != -1) {
+              console.log();
               do {
                 var txt = data.messages[leng].text;
+                console.log();
                 txt = txt.replace(
                   /<(http.+?)>/g,
                   '<a href="$1" target="_blank">$1</a>'
@@ -284,7 +286,15 @@ class mainPage {
                         img = userInfo.members[i].profile.image_32;
                       }
                     }
-                    fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+
+                    if (data.messages[leng].file != undefined) {
+                      if (data.messages[leng].file.thumb_360 != undefined) {
+                        let sendImg = data.messages[leng].file.thumb_360;
+                        fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg"><img src="${sendImg}"></div> </div>`;
+                      }
+                    } else {
+                      fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+                    }
                   } else {
                     for (let i = 0; i < userInfo.members.length; i++) {
                       if (userInfo.members[i].id == data.messages[leng].user) {
@@ -292,7 +302,16 @@ class mainPage {
                         img = userInfo.members[i].profile.image_32;
                       }
                     }
-                    fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                    if (data.messages[leng].file != undefined) {
+                      if (data.messages[leng].file.thumb_360 != undefined) {
+                        let sendImg = data.messages[leng].file.thumb_360;
+                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg"><img src="${sendImg}"></div></div></div>`;
+                      } else {
+                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                      }
+                    } else {
+                      fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                    }
                   }
                 }
                 leng = leng - 1;
@@ -412,6 +431,7 @@ class mainPage {
                 name = data.user.name;
                 img = data.user.profile.image_32;
                 let txt = message.text;
+
                 txt = txt.replace(
                   /<(http.+?)>/g,
                   '<a href="$1" target="_blank">$1</a>'
@@ -428,10 +448,28 @@ class mainPage {
                 } else {
                   if (localStorage.getItem("channel") == message.channel) {
                     if (localStorage.getItem("user") == message.user) {
-                      fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
+                      let sendImg = message.file;
+                      if (sendImg != undefined) {
+                        if (message.file.thumb_360 != undefined) {
+                          sendImg = sendImg.thumb_360;
+                          fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
+                        }
+                      } else {
+                        fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
+                      }
                     } else {
                       sound.play();
-                      fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                      let sendImg = message.file;
+                      if (sendImg != undefined) {
+                        if (message.file.thumb_360 != undefined) {
+                          sendImg = sendImg.thumb_360;
+                          fialdMessage.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
+                        } else {
+                          fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                        }
+                      } else {
+                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                      }
 
                       setTimeout(() => {
                         sound.pause();
