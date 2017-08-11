@@ -4,6 +4,13 @@ class mainPage {
       localStorage.getItem("channel") ||
         localStorage.setItem("channel", "C6CS9BNG3");
       let token = localStorage.getItem("token");
+
+      if (token == "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("channel");
+        localStorage.removeItem("user");
+        location.hash = "";
+      }
       fetch(`https://slack.com/api/auth.test?token=${token}&pretty=1`)
         .then(response => response.json())
         .then(data => {
