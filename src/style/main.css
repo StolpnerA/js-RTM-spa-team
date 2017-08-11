@@ -222,9 +222,14 @@ div#map {
   margin-right: 0;
   text-align: right;
 }
-
+.attachFile {
+  pointer-events: none;
+}
 #file-select {
-  width: 280px;
+  left: 35px;
+  position: absolute;
+  width: 210px;
+  opacity: 0;
 }
 .mdl-dialog__content {
   padding: 20px 24px 24px 24px;
