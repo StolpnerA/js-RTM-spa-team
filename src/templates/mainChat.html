@@ -1,0 +1,78 @@
+<div class="demo-layout-transparent mdl-layout mdl-js-layout">
+    <div class="mdl-layout__drawer">
+        <span class="mdl-layout-title">
+                <div class="userInfo">
+                    <span class="userName">name</span>
+        <i class="material-icons exit">exit_to_app</i>
+    </div>
+    </span>
+    <nav class="mdl-navigation">
+        <div class="infoBox">
+            <div class="channels">
+                Channels: <i class="material-icons dialog-button" id="addChannel">add_circle</i>
+            </div>
+            <div class="contacts">
+                Contacts:
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="chat">
+    <div class="control">
+        <span class="nameGroup">nameGroup</span>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+            <label class="mdl-button mdl-js-button mdl-button--icon" for="sample6">
+                        <i class="material-icons">search</i>
+                    </label>
+            <div class="mdl-textfield__expandable-holder">
+                <input class="mdl-textfield__input" type="text" id="sample6">
+                <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
+            </div>
+        </div>
+    </div>
+    <div class="workPlace">
+
+    </div>
+    <div class="inputMsg">
+        <i class="material-icons menuChat">add_box</i>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label myMdl-textfield">
+            <textarea class="mdl-textfield__input sendMessage" type="text" id="sample3"></textarea>
+            <label class="mdl-textfield__label" for="sample3">Text...</label>
+        </div>
+    </div>
+</div>
+<main class="mdl-layout__content"></main>
+</div>
+<dialog id="dialogForNewChannel" class="mdl-dialog">
+    <h3 class="mdl-dialog__title">Create new channel</h3>
+    <div class="mdl-dialog__content">
+        <input class="nameChannel" type="text" placeholder="Enter name channel">
+    </div>
+    <div class="mdl-dialog__actions">
+        <button type="button" class="mdl-button">Close</button>
+        <button type="button" class="mdl-button accept">Accept</button>
+    </div>
+</dialog>
+<dialog id="dialogForChat" class="mdl-dialog">
+    <h3 class="mdl-dialog__title">Menu</h3>
+    <div class="mdl-dialog__content">
+        <i class="material-icons location">my_location</i> <br>
+
+
+        <form id="myform" method="POST" enctype="multipart/form-data">
+            <i class="material-icons attachFile">attach_file</i><input type="file" name="leToUpload" id="file-select">
+        </form>
+    </div>
+    <div class="mdl-dialog__actions">
+        <button type="button" class="mdl-button">Close</button>
+    </div>
+</dialog>
+<dialog id="dialogForSetMap" class="mdl-dialog">
+    <h3 class="mdl-dialog__title">Menu</h3>
+    <div class="mdl-dialog__content myCssForMap">
+        <div id="map"></div>
+    </div>
+    <div class="mdl-dialog__actions">
+        <button type="button" class="mdl-button">Close</button>
+    </div>
+</dialog>

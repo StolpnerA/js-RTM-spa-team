@@ -1,26 +1,17 @@
+import SlackApi from "../utils/SlackAPI";
+
+let slackApi = new SlackApi();
+
 class mainPage {
   check() {
     if (localStorage.getItem("token")) {
       localStorage.getItem("channel") ||
         localStorage.setItem("channel", "C6CS9BNG3");
-      let token = localStorage.getItem("token");
 
-      if (token == "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("channel");
-        localStorage.removeItem("user");
-        location.hash = "";
-      }
-      fetch(`https://slack.com/api/auth.test?token=${token}&pretty=1`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.ok == false) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("channel");
-            localStorage.removeItem("user");
-            location.hash = "";
-          }
-        })
+      let token = slackApi.readLocalToken();
+
+      slackApi
+        .checkTocken(token)
         .then(this.render())
         .then(this.Handlers())
         .then(this.userInfo())
@@ -31,59 +22,53 @@ class mainPage {
             let room = choosingRoom.join("");
             let token = localStorage.getItem("token");
 
-            fetch(
-              `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
-            )
-              .then(response => response.json())
-              .then(data => {
-                localStorage.setItem("channel", room);
-                let leng = data.messages.length - 1;
-                let placeMsg = document.querySelector(".workPlace");
-                let text;
-                let name;
-                let img;
-                placeMsg.innerHTML = "";
-                if (leng != -1) {
-                  fetch(
-                    `https://slack.com/api/users.list?token=${token}&pretty=1`
-                  )
-                    .then(response => response.json())
-                    .then(userInfo => {
-                      do {
-                        text = data.messages[leng].text;
-                        if (
-                          localStorage.getItem("user") ==
-                          data.messages[leng].user
-                        ) {
-                          for (let i = 0; i < userInfo.members.length; i++) {
-                            if (
-                              userInfo.members[i].id ==
-                              localStorage.getItem("user")
-                            ) {
-                              name = userInfo.members[i].name;
-                              img = userInfo.members[i].profile.image_32;
-                            }
+            slackApi.readRoomMessages(room).then(data => {
+              let leng = data.messages.length - 1;
+              let placeMsg = document.querySelector(".workPlace");
+              let text;
+              let name;
+              let img;
+              placeMsg.innerHTML = "";
+              if (leng != -1) {
+                fetch(
+                  `https://slack.com/api/users.list?token=${token}&pretty=1`
+                )
+                  .then(response => response.json())
+                  .then(userInfo => {
+                    do {
+                      text = data.messages[leng].text;
+                      if (
+                        localStorage.getItem("user") == data.messages[leng].user
+                      ) {
+                        for (let i = 0; i < userInfo.members.length; i++) {
+                          if (
+                            userInfo.members[i].id ==
+                            localStorage.getItem("user")
+                          ) {
+                            name = userInfo.members[i].name;
+                            img = userInfo.members[i].profile.image_32;
                           }
-                          placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
-                        } else {
-                          for (let i = 0; i < userInfo.members.length; i++) {
-                            if (
-                              userInfo.members[i].id == data.messages[leng].user
-                            ) {
-                              name = userInfo.members[i].name;
-                              img = userInfo.members[i].profile.image_32;
-                            }
-                          }
-                          placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
-                          document.querySelector(".nameGroup").innerHTML =
-                            "@" + name;
                         }
-                        leng = leng - 1;
-                      } while (leng >= 0);
-                      placeMsg.scrollTop = placeMsg.scrollHeight;
-                    });
-                }
-              });
+                        placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
+                      } else {
+                        for (let i = 0; i < userInfo.members.length; i++) {
+                          if (
+                            userInfo.members[i].id == data.messages[leng].user
+                          ) {
+                            name = userInfo.members[i].name;
+                            img = userInfo.members[i].profile.image_32;
+                          }
+                        }
+                        placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                        document.querySelector(".nameGroup").innerHTML =
+                          "@" + name;
+                      }
+                      leng = leng - 1;
+                    } while (leng >= 0);
+                    placeMsg.scrollTop = placeMsg.scrollHeight;
+                  });
+              }
+            });
           } else if (choosingRoom[0] == "C") {
             this.loadhistoryMessage();
           }
@@ -126,85 +111,7 @@ class mainPage {
 
   render() {
     let place = document.querySelector("div.conteiner");
-    place.innerHTML = `
-    <div class="demo-layout-transparent mdl-layout mdl-js-layout">
-        <div class="mdl-layout__drawer">
-            <span class="mdl-layout-title">
-                <div class="userInfo">
-                    <span class="userName">name</span>
-                    <i class="material-icons exit">exit_to_app</i>
-                </div>
-            </span>
-            <nav class="mdl-navigation">
-                <div class="infoBox">
-                    <div class = "channels">
-                        Channels:  <i class="material-icons dialog-button" id="addChannel">add_circle</i>
-                    </div>
-                    <div class="contacts">
-                        Contacts: 
-                    </div>
-                </div>
-            </nav>
-        </div>    
-        <div class="chat">
-            <div class="control">
-                <span class="nameGroup">nameGroup</span>
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
-                    <label class="mdl-button mdl-js-button mdl-button--icon" for="sample6">
-                        <i class="material-icons">search</i>
-                    </label>
-                    <div class="mdl-textfield__expandable-holder">
-                        <input class="mdl-textfield__input" type="text" id="sample6">
-                        <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
-                    </div>
-                </div>
-            </div>
-            <div class="workPlace">
-                
-            </div>
-            <div class="inputMsg">
-                <i class="material-icons menuChat">add_box</i><div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label myMdl-textfield">
-                    <textarea class="mdl-textfield__input sendMessage" type="text" id="sample3" ></textarea>
-                    <label class="mdl-textfield__label" for="sample3">Text...</label>
-                </div>
-            </div>
-        </div>
-    <main class="mdl-layout__content"></main>
-    </div>
-    <dialog id="dialogForNewChannel" class="mdl-dialog">
-        <h3 class="mdl-dialog__title">Create new channel</h3>
-        <div class="mdl-dialog__content">
-            <input class="nameChannel" type="text" placeholder="Enter name channel">
-        </div>
-        <div class="mdl-dialog__actions">
-            <button type="button" class="mdl-button">Close</button>
-            <button type="button" class="mdl-button accept">Accept</button>
-        </div>
-     </dialog>
-     <dialog id="dialogForChat" class="mdl-dialog">
-        <h3 class="mdl-dialog__title">Menu</h3>
-        <div class="mdl-dialog__content">
-            <i class="material-icons location">my_location</i> <br>
-          
-            
-            <form id="myform" method="POST" enctype="multipart/form-data">
-            <i class="material-icons attachFile">attach_file</i><input type="file" name="leToUpload" id="file-select">
-        </form>
-        </div>
-        <div class="mdl-dialog__actions">
-            <button type="button" class="mdl-button">Close</button>
-        </div>
-     </dialog>
-     <dialog id="dialogForSetMap" class="mdl-dialog">
-        <h3 class="mdl-dialog__title">Menu</h3>
-        <div class="mdl-dialog__content myCssForMap">
-           <div id="map"></div>
-        </div>
-        <div class="mdl-dialog__actions">
-            <button type="button" class="mdl-button">Close</button>
-        </div>
-     </dialog>
-     `;
+    place.innerHTML = document.getElementById("mainChat").innerHTML;
   }
 
   Handlers() {
