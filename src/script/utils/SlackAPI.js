@@ -41,6 +41,31 @@ class SlackAPI {
 
     return promise;
   }
+  userList(token) {
+    return fetch(
+      `https://slack.com/api/users.list?token=${token}&pretty=1`
+    ).then(response => response.json());
+  }
+  oAuthAccess(code) {
+    return fetch(
+      `https://slack.com/api/oauth.access?client_id=217857254422.216894611363&client_secret=73b8f39e3b53e9635094ae7ce4d1bf69&code=${code}`
+    ).then(response => response.json());
+  }
+  chatPostMsg(token, channel, message, user) {
+    return fetch(
+      `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
+    ).then((document.querySelector(".sendMessage").value = ""));
+  }
+  userInfo(token, user) {
+    return fetch(
+      `https://slack.com/api/users.info?token=${token}&user=${user}&pretty=1`
+    ).then(response => response.json());
+  }
+  channelsHistory(token, channel) {
+    return fetch(
+      `https://slack.com/api/channels.history?token=${token}&channel=${channel}&pretty=1`
+    ).then(response => response.json());
+  }
 }
 
 export default SlackAPI;

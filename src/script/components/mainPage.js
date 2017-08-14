@@ -29,83 +29,74 @@ class mainPage {
               let name;
               let img;
               placeMsg.innerHTML = "";
-              if (leng != -1) {
-                fetch(
-                  `https://slack.com/api/users.list?token=${token}&pretty=1`
-                )
-                  .then(response => response.json())
-                  .then(userInfo => {
-                    do {
-                      text = data.messages[leng].text;
+              if (leng == -1) return;
+              slackApi.userList(token).then(userInfo => {
+                do {
+                  text = data.messages[leng].text;
+                  if (
+                    localStorage.getItem("user") == data.messages[leng].user
+                  ) {
+                    for (let i = 0; i < userInfo.members.length; i++) {
                       if (
-                        localStorage.getItem("user") == data.messages[leng].user
+                        userInfo.members[i].id == localStorage.getItem("user")
                       ) {
-                        for (let i = 0; i < userInfo.members.length; i++) {
-                          if (
-                            userInfo.members[i].id ==
-                            localStorage.getItem("user")
-                          ) {
-                            name = userInfo.members[i].name;
-                            img = userInfo.members[i].profile.image_32;
-                          }
-                        }
-                        placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
-                      } else {
-                        for (let i = 0; i < userInfo.members.length; i++) {
-                          if (
-                            userInfo.members[i].id == data.messages[leng].user
-                          ) {
-                            name = userInfo.members[i].name;
-                            img = userInfo.members[i].profile.image_32;
-                          }
-                        }
-                        placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
-                        document.querySelector(".nameGroup").innerHTML =
-                          "@" + name;
+                        name = userInfo.members[i].name;
+                        img = userInfo.members[i].profile.image_32;
                       }
-                      leng = leng - 1;
-                    } while (leng >= 0);
-                    placeMsg.scrollTop = placeMsg.scrollHeight;
-                  });
-              }
+                    }
+                    placeMsg.innerHTML += document.getElementById(
+                      "myMsg"
+                    ).innerHTML;
+                  } else {
+                    for (let i = 0; i < userInfo.members.length; i++) {
+                      if (userInfo.members[i].id == data.messages[leng].user) {
+                        name = userInfo.members[i].name;
+                        img = userInfo.members[i].profile.image_32;
+                      }
+                    }
+                    placeMsg.innerHTML += document.getElementById(
+                      "opponentMsg"
+                    ).innerHTML;
+                    document.querySelector(".nameGroup").innerHTML = "@" + name;
+                  }
+                  leng = leng - 1;
+                } while (leng >= 0);
+                placeMsg.scrollTop = placeMsg.scrollHeight;
+              });
             });
           } else if (choosingRoom[0] == "C") {
             this.loadhistoryMessage();
           }
         })
-        .then(() => this.loadUsers())
-        .then(() => this.channelList())
-        .then(() => this.wsMsg())
-        .then(() => this.exit())
-        .then(() => this.HandlerMenuChatBtn())
-        .then(() => this.GetYandexMap());
+        .then(this.loadUsers())
+        .then(this.channelList())
+        .then(this.wsMsg())
+        .then(this.exit())
+        .then(this.HandlerMenuChatBtn())
+        .then(this.GetYandexMap());
     } else {
       let code = location.href;
       code = code.split("?");
       code = code.splice(1, 1);
       code = String(code);
       code = code.slice(5).split("&")[0];
-      fetch(
-        `https://slack.com/api/oauth.access?client_id=217857254422.216894611363&client_secret=73b8f39e3b53e9635094ae7ce4d1bf69&code=${code}`
-      )
-        .then(response => response.json())
-        .then(data => {
-          localStorage.setItem("channel", "C6CS9BNG3");
-          let token = data.access_token;
-          localStorage.setItem("token", `${token}`);
-          localStorage.setItem("user", `${data.user_id}`);
-          Promise.resolve()
-            .then(this.render())
-            .then(this.Handlers())
-            .then(this.userInfo())
-            .then(this.loadhistoryMessage())
-            .then(this.loadUsers())
-            .then(this.channelList())
-            .then(this.wsMsg())
-            .then(this.exit())
-            .then(this.HandlerMenuChatBtn())
-            .then(this.GetYandexMap());
-        });
+      slackApi.OAuthAccess(code).then(data => {
+        localStorage.setItem("channel", "C6CS9BNG3");
+        let token = data.access_token;
+        localStorage.setItem("token", `${token}`);
+        localStorage.setItem("user", `${data.user_id}`);
+        Promise.resolve()
+          .then(this.render())
+          .then(this.Handlers())
+          .then(this.userInfo())
+          .then(this.loadhistoryMessage())
+          .then(this.loadUsers())
+          .then(this.channelList())
+          .then(this.wsMsg())
+          .then(this.exit())
+          .then(this.HandlerMenuChatBtn())
+          .then(this.GetYandexMap());
+      });
     }
   }
 
@@ -125,120 +116,96 @@ class mainPage {
   }
 
   sendMessage(coords) {
-    let user = localStorage.getItem("user");
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    if (!coords) {
-      let message = document.querySelector(".sendMessage").value;
-      if (message) {
-        message = message.replace(/\&/g, "%26");
-        message = message.replace(/\?/g, "%20%3F");
-        fetch(
-          `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&as_user=${user}&username=${user}&pretty=1`
-        ).then((document.querySelector(".sendMessage").value = ""));
-      }
+    let message = document.querySelector(".sendMessage").value;
+    let user = localStorage.getItem("user");
+    if (!coords && message) {
+      message = message.replace(/\&/g, "%26");
+      message = message.replace(/\?/g, "%20%3F");
+      slackApi.chatPostMsg(token, channel, message, user);
     } else {
       coords = `<map> ${coords}`;
-      fetch(
-        `https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${coords}&as_user=${user}&username=${user}&pretty=1`
-      ).then((document.querySelector(".sendMessage").value = ""));
+      slackApi.chatPostMsg(token, channel, coords, user);
     }
   }
 
   userInfo() {
-    let user = localStorage.getItem("user");
     let token = localStorage.getItem("token");
-    fetch(
-      `https://slack.com/api/users.info?token=${token}&user=${user}&pretty=1`
-    )
-      .then(response => response.json())
-      .then(data => {
-        document.querySelector(".userName").innerHTML = `<img src="${data.user
-          .profile.image_32}"> ${data.user.name}`;
-      });
+    let user = localStorage.getItem("user");
+    slackApi.userInfo(token, user).then(data => {
+      document.querySelector(".userName").innerHTML = `<img src="${data.user
+        .profile.image_32}"> ${data.user.name}`;
+    });
   }
 
   loadhistoryMessage() {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
     let user = localStorage.getItem("user");
-    let fialdMessage = document.querySelector(".workPlace");
+    let placeMsg = document.querySelector(".workPlace");
     let img;
     let name;
-    fetch(
-      `https://slack.com/api/channels.history?token=${token}&channel=${channel}&pretty=1`
-    )
-      .then(response => response.json())
-      .then(data => {
-        fetch(`https://slack.com/api/users.list?token=${token}&pretty=1`)
-          .then(response => response.json())
-          .then(userInfo => {
-            let leng = data.messages.length - 1;
-            fialdMessage.innerHTML = "";
-            if (leng != -1) {
-              console.log();
-              do {
-                var txt = data.messages[leng].text;
-                console.log();
-                txt = txt.replace(
-                  /<(http.+?)>/g,
-                  '<a href="$1" target="_blank">$1</a>'
-                );
-
-                if (txt.indexOf("&lt;map&gt;") == 0) {
-                  txt = txt.split("&lt;map&gt;");
-                  txt = txt.splice(1, 11).join(",");
-                  txt = txt.split(",");
-                  txt.push(leng);
-                  let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
-                  fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
-                  this.sendCoords(txt);
-                } else {
-                  if (
-                    localStorage.getItem("user") == data.messages[leng].user
-                  ) {
-                    for (let i = 0; i < userInfo.members.length; i++) {
-                      if (
-                        userInfo.members[i].id == localStorage.getItem("user")
-                      ) {
-                        name = userInfo.members[i].name;
-                        img = userInfo.members[i].profile.image_32;
-                      }
-                    }
-
-                    if (data.messages[leng].file != undefined) {
-                      if (data.messages[leng].file.thumb_360 != undefined) {
-                        let sendImg = data.messages[leng].file.thumb_360;
-                        fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg"><img src="${sendImg}"></div> </div>`;
-                      }
-                    } else {
-                      fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
-                    }
-                  } else {
-                    for (let i = 0; i < userInfo.members.length; i++) {
-                      if (userInfo.members[i].id == data.messages[leng].user) {
-                        name = userInfo.members[i].name;
-                        img = userInfo.members[i].profile.image_32;
-                      }
-                    }
-                    if (data.messages[leng].file != undefined) {
-                      if (data.messages[leng].file.thumb_360 != undefined) {
-                        let sendImg = data.messages[leng].file.thumb_360;
-                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg"><img src="${sendImg}"></div></div></div>`;
-                      } else {
-                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
-                      }
-                    } else {
-                      fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
-                    }
-                  }
+    slackApi.channelsHistory(token, channel).then(data => {
+      slackApi.userList(token).then(userInfo => {
+        let leng = data.messages.length - 1;
+        placeMsg.innerHTML = "";
+        if (leng == -1) return;
+        do {
+          var txt = data.messages[leng].text;
+          txt = txt.replace(
+            /<(http.+?)>/g,
+            '<a href="$1" target="_blank">$1</a>'
+          );
+          if (txt.indexOf("&lt;map&gt;") == 0) {
+            txt = txt.split("&lt;map&gt;");
+            txt = txt.splice(1, 11).join(",");
+            txt = txt.split(",");
+            txt.push(leng);
+            let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
+            // ЕСТЬ ВОПРОС!
+            placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40"> <div class="msg">${div}</div> </div>`;
+            this.sendCoords(txt);
+          } else {
+            if (localStorage.getItem("user") == data.messages[leng].user) {
+              for (let i = 0; i < userInfo.members.length; i++) {
+                if (userInfo.members[i].id == localStorage.getItem("user")) {
+                  name = userInfo.members[i].name;
+                  img = userInfo.members[i].profile.image_32;
                 }
-                leng = leng - 1;
-              } while (leng >= 0);
-              fialdMessage.scrollTop = fialdMessage.scrollHeight;
+              }
+              if (data.messages[leng].file != undefined) {
+                if (data.messages[leng].file.thumb_360 != undefined) {
+                  let sendImg = data.messages[leng].file.thumb_360;
+                  placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg"><img src="${sendImg}"></div> </div>`;
+                }
+              } else {
+                placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+              }
+            } else {
+              for (let i = 0; i < userInfo.members.length; i++) {
+                if (userInfo.members[i].id == data.messages[leng].user) {
+                  name = userInfo.members[i].name;
+                  img = userInfo.members[i].profile.image_32;
+                }
+              }
+              if (data.messages[leng].file != undefined) {
+                if (data.messages[leng].file.thumb_360 != undefined) {
+                  let sendImg = data.messages[leng].file.thumb_360;
+                  placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg"><img src="${sendImg}"></div></div></div>`;
+                } else {
+                  placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                }
+              } else {
+                placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+              }
             }
-          });
+          }
+          leng = leng - 1;
+        } while (leng >= 0);
+        placeMsg.scrollTop = placeMsg.scrollHeight;
       });
+    });
   }
 
   loadUsers() {
@@ -297,7 +264,7 @@ class mainPage {
   wsMsg() {
     let ur;
     let data;
-    let fialdMessage = document.querySelector(".workPlace");
+    let placeMsg = document.querySelector(".workPlace");
     let token = localStorage.getItem("token");
     let img;
     let sound = document.querySelector("#audio");
@@ -362,7 +329,7 @@ class mainPage {
                   txt = txt.split(",");
                   txt.push(message.ts);
                   let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
-                  fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
+                  placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
                   globalThis.sendCoords(txt);
                 } else {
                   if (localStorage.getItem("channel") == message.channel) {
@@ -371,10 +338,10 @@ class mainPage {
                       if (sendImg != undefined) {
                         if (sendImg.thumb_360 != undefined) {
                           sendImg = sendImg.thumb_360;
-                          fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
+                          placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
                         }
                       } else {
-                        fialdMessage.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
+                        placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
                       }
                     } else {
                       sound.play();
@@ -382,19 +349,19 @@ class mainPage {
                       if (sendImg != undefined) {
                         if (sendImg.thumb_360 != undefined) {
                           sendImg = sendImg.thumb_360;
-                          fialdMessage.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
+                          placeMsg.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
                         } else {
-                          fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                          placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                         }
                       } else {
-                        fialdMessage.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                        placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
                       }
 
                       setTimeout(() => {
                         sound.pause();
                       }, 825);
                     }
-                    fialdMessage.scrollTop = fialdMessage.scrollHeight;
+                    placeMsg.scrollTop = placeMsg.scrollHeight;
                   }
                 }
               });
