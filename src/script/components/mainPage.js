@@ -44,9 +44,11 @@ class mainPage {
                         img = userInfo.members[i].profile.image_32;
                       }
                     }
-                    placeMsg.innerHTML += document.getElementById(
-                      "myMsg"
-                    ).innerHTML;
+                    placeMsg.innerHTML += `<div class="myMsg">
+                    <span class="name">${name}</span><br>
+                    <img class="myImgCss myMsgImg" src="${img}" width="40" height="40">
+                    <div class="msg">${text}</div>
+                </div>`;
                   } else {
                     for (let i = 0; i < userInfo.members.length; i++) {
                       if (userInfo.members[i].id == data.messages[leng].user) {
@@ -54,9 +56,11 @@ class mainPage {
                         img = userInfo.members[i].profile.image_32;
                       }
                     }
-                    placeMsg.innerHTML += document.getElementById(
-                      "opponentMsg"
-                    ).innerHTML;
+                    placeMsg.innerHTML += `<div class="opponentMsg">
+                    <span class="name">${name}</span><br>
+                    <img class="myImgCss opponentMsgImg" src="${img}" width="40" height="40">
+                    <div class="msg">${text}</div>
+                </div>`;
                     document.querySelector(".nameGroup").innerHTML = "@" + name;
                   }
                   leng = leng - 1;
@@ -316,6 +320,8 @@ class mainPage {
               let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
               placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
               globalThis.sendCoords(text);
+              sound.play();
+              placeMsg.scrollTop = placeMsg.scrollHeight;
             } else {
               if (localStorage.getItem("channel") == message.channel) {
                 if (localStorage.getItem("user") == message.user) {
@@ -341,10 +347,6 @@ class mainPage {
                   } else {
                     placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
                   }
-
-                  setTimeout(() => {
-                    sound.pause();
-                  }, 825);
                 }
                 placeMsg.scrollTop = placeMsg.scrollHeight;
               }
@@ -388,7 +390,7 @@ class mainPage {
       }
     });
   }
-  //Я что-то забыл нахуя этот метод?
+
   heandlerMsgUsersClick(divContacts) {
     let token = localStorage.getItem("token");
     let room;

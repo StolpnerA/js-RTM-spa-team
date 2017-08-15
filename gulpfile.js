@@ -11,6 +11,7 @@ var gulp = require("gulp"),
   pngquant = require("imagemin-pngquant"),
   rimraf = require("rimraf"),
   browserSync = require("browser-sync"),
+  // gulpCopy = require("gulp-copy"),
   reload = browserSync.reload;
 
 var path = {
@@ -20,6 +21,7 @@ var path = {
     css: "build/style/",
     img: "build/img/",
     fonts: "build/fonts/"
+    //files: "build/files/"
   },
   src: {
     html: "src/*.html",
@@ -27,6 +29,7 @@ var path = {
     css: "src/style/main.css",
     img: "src/img/**/*.*",
     fonts: "src/fonts/**/*.*"
+    //files: "src/files/*.*"
   },
   watch: {
     html: "src/**/*.html",
@@ -34,6 +37,7 @@ var path = {
     css: "src/style/**/*.css",
     img: "src/img/**/*.*",
     fonts: "src/fonts/**/*.*"
+    //files: "src/files/*.*"
   },
   clean: "./build"
 };
@@ -48,7 +52,12 @@ var config = {
   port: 9000,
   logPrefix: "Frontend"
 };
-
+// gulp.task("files:build", function() {
+//   return gulp
+//     .src(path.src.html)
+//     .pipe(gulpCopy(path.build.files, options))
+//     .dest(path.build.files);
+// });
 gulp.task("html:build", function() {
   return gulp
     .src(path.src.html)
@@ -115,7 +124,8 @@ gulp.task("build", [
   "js:build",
   "css:build",
   "img:build"
-  // 'fonts:build'
+  // 'fonts:build',
+  //"files:build"
 ]);
 
 gulp.task("watch", function() {
@@ -134,6 +144,9 @@ gulp.task("watch", function() {
   watch([path.watch.fonts], function(event, cb) {
     gulp.start("fonts:build");
   });
+  // watch([path.watch.files], function(event, cb) {
+  //   gulp.start("files:build");
+  // });
 });
 
 gulp.task("webserver", function() {
