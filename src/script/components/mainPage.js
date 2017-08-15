@@ -213,12 +213,9 @@ class mainPage {
     let userName;
     let img;
     let divContacts = document.querySelector(".contacts");
-    fetch(
-      `https://slack.com/api/users.list?token=${localStorage.getItem(
-        "token"
-      )}&pretty=1`
-    )
-      .then(response => response.json())
+    let token = localStorage.getItem("token");
+    slackApi
+      .userList(token)
       .then(data => {
         for (let i = 0; i < data.members.length; i++) {
           userId = data.members[i].id;
@@ -237,8 +234,8 @@ class mainPage {
     let token = localStorage.getItem("token");
     let channelId, channelName;
     let divChannels = document.querySelector(".channels");
-    fetch(`https://slack.com/api/channels.list?token=${token}&pretty=1`)
-      .then(response => response.json())
+    slackApi
+      .channelList(token)
       .then(data => {
         for (let i = 0; i < data.channels.length; i++) {
           if (data.channels[i].is_archived == false) {
@@ -270,107 +267,96 @@ class mainPage {
     let sound = document.querySelector("#audio");
     let user = localStorage.getItem("user");
     let userName;
-    fetch(`https://slack.com/api/rtm.connect?token=${token}&pretty=1`)
-      .then(response => response.json())
-      .then(data => {
-        ur = data.url;
-      })
-      .then(() => {
-        let message;
-        let ws = new WebSocket(`${ur}`);
-        let name;
-        let globalThis = this;
-        ws.onopen = function() {};
-        ws.onmessage = function(event) {
-          let TypeMessage = JSON.parse(event.data);
-          if (TypeMessage.type == "channel_archive") {
-            let channel = TypeMessage.channel;
-            document.querySelector(`.channel_${channel}`).remove();
-          }
-          if (TypeMessage.type == "channel_created") {
-            let channelId = TypeMessage.channel.id;
-            let channelName = TypeMessage.channel.name;
-            let divChannels = document.querySelector(".channels");
-            divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
+    slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
+      let message;
+      let ws = new WebSocket(`${ur}`);
+      let name;
+      let globalThis = this;
+      ws.onopen = function() {};
+      ws.onmessage = function(event) {
+        let TypeMessage = JSON.parse(event.data);
+        if (TypeMessage.type == "channel_archive") {
+          let channel = TypeMessage.channel;
+          document.querySelector(`.channel_${channel}`).remove();
+        }
+        if (TypeMessage.type == "channel_created") {
+          let channelId = TypeMessage.channel.id;
+          let channelName = TypeMessage.channel.name;
+          let divChannels = document.querySelector(".channels");
+          divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
           <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
           <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
            <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
                     </span>`;
+        }
+        TypeMessage = TypeMessage.type;
+        if (TypeMessage == "message") {
+          message = JSON.parse(event.data);
+          if (
+            message.ts == "1501544614.596385" ||
+            message.ts == "1501796123.395835"
+          ) {
+            return;
           }
-          TypeMessage = TypeMessage.type;
-          if (TypeMessage == "message") {
-            message = JSON.parse(event.data);
-            if (
-              message.ts == "1501544614.596385" ||
-              message.ts == "1501796123.395835"
-            ) {
-              return;
-            }
-
-            userName = message.user;
-            fetch(
-              `https://slack.com/api/users.info?token=${token}&user=${userName}&pretty=1`
-            )
-              .then(response => response.json())
-              .then(data => {
-                if (data.user == undefined) return;
-                name = data.user.name;
-                img = data.user.profile.image_32;
-                let txt = message.text;
-
-                txt = txt.replace(
-                  /<(http.+?)>/g,
-                  '<a href="$1" target="_blank">$1</a>'
-                );
-
-                if (txt.indexOf("&lt;map&gt;") == 0) {
-                  txt = txt.split("&lt;map&gt;");
-                  txt = txt.splice(1, 11).join(",");
-                  txt = txt.split(",");
-                  txt.push(message.ts);
-                  let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
-                  placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
-                  globalThis.sendCoords(txt);
-                } else {
-                  if (localStorage.getItem("channel") == message.channel) {
-                    if (localStorage.getItem("user") == message.user) {
-                      let sendImg = message.file;
-                      if (sendImg != undefined) {
-                        if (sendImg.thumb_360 != undefined) {
-                          sendImg = sendImg.thumb_360;
-                          placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
-                        }
-                      } else {
-                        placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${txt}</div> </div>`;
-                      }
-                    } else {
-                      sound.play();
-                      let sendImg = message.file;
-                      if (sendImg != undefined) {
-                        if (sendImg.thumb_360 != undefined) {
-                          sendImg = sendImg.thumb_360;
-                          placeMsg.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
-                        } else {
-                          placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
-                        }
-                      } else {
-                        placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
-                      }
-
-                      setTimeout(() => {
-                        sound.pause();
-                      }, 825);
+          userName = message.user;
+          slackApi.userInfo(token, userName).then(data => {
+            if (data.user == undefined) return;
+            name = data.user.name;
+            img = data.user.profile.image_32;
+            let text = message.text;
+            text = text.replace(
+              /<(http.+?)>/g,
+              '<a href="$1" target="_blank">$1</a>'
+            );
+            if (text.indexOf("&lt;map&gt;") == 0) {
+              text = text.split("&lt;map&gt;");
+              text = text.splice(1, 11).join(",");
+              text = text.split(",");
+              text.push(message.ts);
+              let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
+              placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
+              globalThis.sendCoords(text);
+            } else {
+              if (localStorage.getItem("channel") == message.channel) {
+                if (localStorage.getItem("user") == message.user) {
+                  let sendImg = message.file;
+                  if (sendImg != undefined) {
+                    if (sendImg.thumb_360 != undefined) {
+                      sendImg = sendImg.thumb_360;
+                      placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
                     }
-                    placeMsg.scrollTop = placeMsg.scrollHeight;
+                  } else {
+                    placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div></div>`;
                   }
+                } else {
+                  sound.play();
+                  let sendImg = message.file;
+                  if (sendImg != undefined) {
+                    if (sendImg.thumb_360 != undefined) {
+                      sendImg = sendImg.thumb_360;
+                      placeMsg.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
+                    } else {
+                      placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                    }
+                  } else {
+                    placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                  }
+
+                  setTimeout(() => {
+                    sound.pause();
+                  }, 825);
                 }
-              });
-          }
-        };
-      });
+                placeMsg.scrollTop = placeMsg.scrollHeight;
+              }
+            }
+          });
+        }
+      };
+    });
   }
 
   heandlerChannelsClick(divChannels) {
+    let token = localStorage.getItem("token");
     divChannels.addEventListener("click", e => {
       let target = e.target;
       if (target.tagName == "I" && target.id == "addChannel") {
@@ -378,19 +364,11 @@ class mainPage {
       }
       if (target.tagName == "I" && target.id == "removeChannel") {
         let className = target.className;
-        let token = localStorage.getItem("token");
         className = className.split("channel_")[1];
-        // let del = document
-        //   .querySelectorAll(`.channel_${className}`)[0]
-        //   .remove();
-
-        fetch(
-          `https://slack.com/api/channels.archive?token=${token}&channel=${className}&pretty=1`
-        ).then(
-          fetch(
-            `https://slack.com/api/channels.leave?token=${token}&channel=${className}&pretty=1`
-          )
-            .then(localStorage.setItem("channel", "C6CS9BNG3"))
+        slackApi.channelArchive(token, className).then(
+          slackApi
+            .channelLeave(token, className)
+            .then(localStorage.setItem("channel", "C6CS9BNG3")) // есть косяк, в других чатах не будет перезходить на general
             .then(this.loadhistoryMessage())
         );
       }
@@ -404,15 +382,13 @@ class mainPage {
         let nameGroupTag = document.querySelector(".nameGroup");
         let channelName = className.split("channelName_")[1];
         nameGroupTag.innerHTML = "# " + channelName;
-        fetch(
-          `https://slack.com/api/channels.join?token=${localStorage.getItem(
-            "token"
-          )}&name=${channelName}&pretty=1`
-        ).then(this.loadhistoryMessage());
+        slackApi
+          .channelJoin(token, channelName)
+          .then(this.loadhistoryMessage());
       }
     });
   }
-
+  //Я что-то забыл нахуя этот метод?
   heandlerMsgUsersClick(divContacts) {
     let token = localStorage.getItem("token");
     let room;
@@ -448,51 +424,39 @@ class mainPage {
                     let img;
                     placeMsg.innerHTML = "";
                     if (leng != -1) {
-                      fetch(
-                        `https://slack.com/api/users.list?token=${token}&pretty=1`
-                      )
-                        .then(response => response.json())
-                        .then(userInfo => {
-                          do {
-                            text = data.messages[leng].text;
-                            if (
-                              localStorage.getItem("user") ==
-                              data.messages[leng].user
-                            ) {
-                              for (
-                                let i = 0;
-                                i < userInfo.members.length;
-                                i++
+                      slackApi.userList(token).then(userInfo => {
+                        do {
+                          text = data.messages[leng].text;
+                          if (
+                            localStorage.getItem("user") ==
+                            data.messages[leng].user
+                          ) {
+                            for (let i = 0; i < userInfo.members.length; i++) {
+                              if (
+                                userInfo.members[i].id ==
+                                localStorage.getItem("user")
                               ) {
-                                if (
-                                  userInfo.members[i].id ==
-                                  localStorage.getItem("user")
-                                ) {
-                                  name = userInfo.members[i].name;
-                                  img = userInfo.members[i].profile.image_32;
-                                }
+                                name = userInfo.members[i].name;
+                                img = userInfo.members[i].profile.image_32;
                               }
-                              placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
-                            } else {
-                              for (
-                                let i = 0;
-                                i < userInfo.members.length;
-                                i++
-                              ) {
-                                if (
-                                  userInfo.members[i].id ==
-                                  data.messages[leng].user
-                                ) {
-                                  name = userInfo.members[i].name;
-                                  img = userInfo.members[i].profile.image_32;
-                                }
-                              }
-                              placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
                             }
-                            leng = leng - 1;
-                          } while (leng >= 0);
-                          placeMsg.scrollTop = placeMsg.scrollHeight;
-                        });
+                            placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
+                          } else {
+                            for (let i = 0; i < userInfo.members.length; i++) {
+                              if (
+                                userInfo.members[i].id ==
+                                data.messages[leng].user
+                              ) {
+                                name = userInfo.members[i].name;
+                                img = userInfo.members[i].profile.image_32;
+                              }
+                            }
+                            placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                          }
+                          leng = leng - 1;
+                        } while (leng >= 0);
+                        placeMsg.scrollTop = placeMsg.scrollHeight;
+                      });
                     }
                   });
               }
@@ -518,9 +482,7 @@ class mainPage {
       nameChannel = nameChannel.value;
       let token = localStorage.getItem("token");
       if (!nameChannel) return;
-      fetch(
-        `https://slack.com/api/channels.create?token=${token}&name=${nameChannel}&pretty=1`
-      ).then(() => dialog.close());
+      slackApi.channelCreate(token, nameChannel).then(() => dialog.close());
     });
   }
 

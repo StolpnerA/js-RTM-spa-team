@@ -66,6 +66,36 @@ class SlackAPI {
       `https://slack.com/api/channels.history?token=${token}&channel=${channel}&pretty=1`
     ).then(response => response.json());
   }
+  channelList(token) {
+    return fetch(
+      `https://slack.com/api/channels.list?token=${token}&pretty=1`
+    ).then(response => response.json());
+  }
+  rtmConnect(token, ur) {
+    return fetch(
+      `https://slack.com/api/rtm.connect?token=${token}&pretty=1`
+    ).then(response => response.json());
+  }
+  channelArchive(token, channel) {
+    return fetch(
+      `https://slack.com/api/channels.archive?token=${token}&channel=${channel}&pretty=1`
+    );
+  }
+  channelLeave(token, channel) {
+    return fetch(
+      `https://slack.com/api/channels.leave?token=${token}&channel=${channel}&pretty=1`
+    );
+  }
+  channelJoin(token, channelName) {
+    return fetch(
+      `https://slack.com/api/channels.join?token=${token}&name=${channelName}&pretty=1`
+    );
+  }
+  channelCreate(token, nameChannel) {
+    return fetch(
+      `https://slack.com/api/channels.create?token=${token}&name=${nameChannel}&pretty=1`
+    );
+  }
 }
 
 export default SlackAPI;
