@@ -406,64 +406,54 @@ class mainPage {
         let nameGroupTag = document.querySelector(".nameGroup");
         let channelName = className.split("userName_")[1];
         nameGroupTag.innerHTML = "@ " + channelName;
-        fetch(`https://slack.com/api/im.list?token=${token}&pretty=1`)
-          .then(response => response.json())
-          .then(data => {
-            let userId = className.split("userName_")[0].slice(0, -1);
-            for (let i = 0; i < data.ims.length; i++) {
-              if (userId == data.ims[i].user) {
-                room = data.ims[i].id;
-                fetch(
-                  `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
-                )
-                  .then(response => response.json())
-                  .then(data => {
-                    localStorage.setItem("channel", room);
-                    let leng = data.messages.length - 1;
-                    let placeMsg = document.querySelector(".workPlace");
-                    let text;
-                    let name;
-                    let img;
-                    placeMsg.innerHTML = "";
-                    if (leng != -1) {
-                      slackApi.userList(token).then(userInfo => {
-                        do {
-                          text = data.messages[leng].text;
+        slackApi.imList(token).then(data => {
+          let userId = className.split("userName_")[0].slice(0, -1);
+          for (let i = 0; i < data.ims.length; i++) {
+            if (userId == data.ims[i].user) {
+              room = data.ims[i].id;
+              slackApi.imHistory(token, room).then(data => {
+                localStorage.setItem("channel", room);
+                let leng = data.messages.length - 1;
+                let placeMsg = document.querySelector(".workPlace");
+                let text, name, img;
+                placeMsg.innerHTML = "";
+                if (leng != -1) {
+                  slackApi.userList(token).then(userInfo => {
+                    do {
+                      text = data.messages[leng].text;
+                      if (
+                        localStorage.getItem("user") == data.messages[leng].user
+                      ) {
+                        for (let i = 0; i < userInfo.members.length; i++) {
                           if (
-                            localStorage.getItem("user") ==
-                            data.messages[leng].user
+                            userInfo.members[i].id ==
+                            localStorage.getItem("user")
                           ) {
-                            for (let i = 0; i < userInfo.members.length; i++) {
-                              if (
-                                userInfo.members[i].id ==
-                                localStorage.getItem("user")
-                              ) {
-                                name = userInfo.members[i].name;
-                                img = userInfo.members[i].profile.image_32;
-                              }
-                            }
-                            placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
-                          } else {
-                            for (let i = 0; i < userInfo.members.length; i++) {
-                              if (
-                                userInfo.members[i].id ==
-                                data.messages[leng].user
-                              ) {
-                                name = userInfo.members[i].name;
-                                img = userInfo.members[i].profile.image_32;
-                              }
-                            }
-                            placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                            name = userInfo.members[i].name;
+                            img = userInfo.members[i].profile.image_32;
                           }
-                          leng = leng - 1;
-                        } while (leng >= 0);
-                        placeMsg.scrollTop = placeMsg.scrollHeight;
-                      });
-                    }
+                        }
+                        placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
+                      } else {
+                        for (let i = 0; i < userInfo.members.length; i++) {
+                          if (
+                            userInfo.members[i].id == data.messages[leng].user
+                          ) {
+                            name = userInfo.members[i].name;
+                            img = userInfo.members[i].profile.image_32;
+                          }
+                        }
+                        placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                      }
+                      leng = leng - 1;
+                    } while (leng >= 0);
+                    placeMsg.scrollTop = placeMsg.scrollHeight;
                   });
-              }
+                }
+              });
             }
-          });
+          }
+        });
       }
     });
   }

@@ -96,6 +96,16 @@ class SlackAPI {
       `https://slack.com/api/channels.create?token=${token}&name=${nameChannel}&pretty=1`
     );
   }
+  imList(token) {
+    return fetch(
+      `https://slack.com/api/im.list?token=${token}&pretty=1`
+    ).then(response => response.json());
+  }
+  imHistory(token, room) {
+    return fetch(
+      `https://slack.com/api/im.history?token=${token}&channel=${room}&pretty=1`
+    ).then(response => response.json());
+  }
 }
 
 export default SlackAPI;
