@@ -42,33 +42,16 @@
         //= templates/mainChat.html
     </script>
     <script type="html/template" id="myMsg">
-        <div class="myMsg">
-            <span class="name">${name}</span><br>
-            <img class="myImgCss myMsgImg" src="${img}" width="40" height="40">
-            <div class="msg">${text}</div>
-        </div>
+        //= templates/myMsg.html
     </script>
     <script type="html/template" id="opponentMsg">
-        <div class="opponentMsg">
-            <span class="name">${name}</span><br>
-            <img class="myImgCss opponentMsgImg" src="${img}" width="40" height="40">
-            <div class="msg">${text}</div>
-        </div>
+        //= templates/opponentMsg.html
     </script>
     <script type="html/template" id="contacts">
-        <span class="mdl-chip mdl-chip--contact mdl-chip--deletable user_${userId} userName_${userName}">
-            <img class="mdl-chip__contact user_${userId} userName_${userName}" src="${img}">
-            <span class="mdl-chip__text user_${userId} userName_${userName}">${userName}</span>
-        </span>
+        //= templates/contacts.html
     </script>
     <script type="html/template" id="channelsList">
-        <span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
-            <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
-            <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
-        <button type="button" class="mdl-chip__action">
-            <i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i>
-        </button>
-        </span>
+        //= templates/channelsList.html
     </script>
     <script src="./script/app.js"></script>
 </body>
