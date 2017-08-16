@@ -157,17 +157,18 @@ class mainPage {
         let leng = data.messages.length - 1;
         placeMsg.innerHTML = "";
         if (leng == -1) return;
+
         do {
-          var txt = data.messages[leng].text;
-          txt = txt.replace(
+          let text = data.messages[leng].text;
+          text = text.replace(
             /<(http.+?)>/g,
             '<a href="$1" target="_blank">$1</a>'
           );
-          if (txt.indexOf("&lt;map&gt;") == 0) {
-            txt = txt.split("&lt;map&gt;");
-            txt = txt.splice(1, 11).join(",");
-            txt = txt.split(",");
-            txt.push(leng);
+          if (text.indexOf("&lt;map&gt;") == 0) {
+            text = text.split("&lt;map&gt;");
+            text = text.splice(1, 11).join(",");
+            text = text.split(",");
+            text.push(leng);
             let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
             let tpl = document.getElementById("myMsg").innerHTML;
             placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
@@ -175,7 +176,7 @@ class mainPage {
               img: img,
               text: div
             });
-            this.sendCoords(txt);
+            this.sendCoords(text);
           } else {
             if (localStorage.getItem("user") == data.messages[leng].user) {
               for (let i = 0; i < userInfo.members.length; i++) {
@@ -201,7 +202,7 @@ class mainPage {
                 placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
                   name: name,
                   img: img,
-                  text: txt
+                  text: text
                 });
               }
             } else {
@@ -228,7 +229,7 @@ class mainPage {
                 placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
                   name: name,
                   img: img,
-                  text: txt
+                  text: text
                 });
               }
             }
@@ -251,7 +252,7 @@ class mainPage {
           userId = data.members[i].id;
           userName = data.members[i].name;
           img = data.members[i].profile.image_32;
-          let tpl = document.getElementById("contacts").innerHTML;
+          let tpl = readTemplate("contacts");
           divContacts.innerHTML += rendertpl.compileTpl(tpl, {
             userId: userId,
             userName: userName,
@@ -263,140 +264,123 @@ class mainPage {
   }
 
   channelList() {
-    let token = localStorage.getItem("token");
     let channelId, channelName;
+    let token = localStorage.getItem("token");
     let divChannels = $$(".channels");
+    let nameGroup = $$(".nameGroup");
     slackApi
       .channelList(token)
       .then(data => {
         for (let i = 0; i < data.channels.length; i++) {
-          if (data.channels[i].is_archived == false) {
-            channelId = data.channels[i].id;
-            channelName = data.channels[i].name;
-            let tpl = document.getElementById("channelsList").innerHTML;
-            divChannels.innerHTML += rendertpl.compileTpl(tpl, {
-              channelId: channelId,
-              channelName: channelName
-            });
-          }
-        }
-        let nameGroup = $$(".nameGroup");
-        for (let i = 0; i < data.channels.length; i++) {
           if (data.channels[i].id == localStorage.getItem("channel")) {
             nameGroup.innerHTML = data.channels[i].name_normalized;
           }
-        }
-      })
-      .then(() => this.heandlerChannelsClick(divChannels));
-  }
-
-  wsMsg() {
-    let ur, data, img, userName;
-    let placeMsg = $$(".workPlace");
-    let token = localStorage.getItem("token");
-    let sound = $$("#audio");
-    let user = localStorage.getItem("user");
-    slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
-      let message, name;
-      let ws = new WebSocket(`${ur}`);
-      let globalThis = this;
-      ws.onopen = function() {};
-      ws.onmessage = function(event) {
-        let TypeMessage = JSON.parse(event.data);
-        if (TypeMessage.type == "channel_archive") {
-          let channel = TypeMessage.channel;
-          $$(`.channel_${channel}`).remove();
-        }
-        if (TypeMessage.type == "channel_created") {
-          let channelId = TypeMessage.channel.id;
-          let channelName = TypeMessage.channel.name;
-          let divChannels = $$(".channels");
-          let tpl = document.getElementById("channelsList").innerHTML;
+          if (data.channels[i].is_archived != false) continue;
+          channelId = data.channels[i].id;
+          channelName = data.channels[i].name;
+          let tpl = readTemplate("channelsList");
           divChannels.innerHTML += rendertpl.compileTpl(tpl, {
             channelId: channelId,
             channelName: channelName
           });
         }
-        if (TypeMessage.type == "message") {
+      })
+      .then(() => this.heandlerChannelsClick(divChannels));
+  }
+
+  renderNewChannel(typeMessage) {
+    let channelId = typeMessage.channel.id;
+    let channelName = typeMessage.channel.name;
+    let divChannels = $$(".channels");
+    let tpl = readTemplate("channelsList");
+    divChannels.innerHTML += rendertpl.compileTpl(tpl, {
+      channelId: channelId,
+      channelName: channelName
+    });
+  }
+
+  removeChannelDOM(typeMessage) {
+    let channel = typeMessage.channel;
+    $$(`.channel_${channel}`).remove();
+  }
+
+  replaceMsg(text, count, name, img, placeMsg, sound) {
+    text = text.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
+    if (text.indexOf("&lt;map&gt;") == 0) {
+      text = text.split("&lt;map&gt;");
+      text = text.splice(1, 11).join(",");
+      text = text.split(",");
+      text.push(count);
+      let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
+      let tpl = readTemplate("myMsg");
+      placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+        name: name,
+        img: img,
+        text: div
+      });
+      this.sendCoords(text);
+      sound.play();
+      text = undefined;
+      placeMsg.scrollTop = placeMsg.scrollHeight;
+    }
+    return text;
+  }
+
+  renderMsg(message, token) {
+    let placeMsg = $$(".workPlace");
+    let sound = $$("#audio");
+    let sendImg = message.file;
+    // Костыль для бага с сообщениями, которые приходят непонятно от куда
+    if (
+      message.ts == "1501544614.596385" ||
+      message.ts == "1501796123.395835"
+    ) {
+      return;
+    }
+    let userName = message.user;
+    slackApi.userInfo(token, userName).then(data => {
+      if (data.user == undefined) return;
+      let name = data.user.name;
+      let img = data.user.profile.image_32;
+      let text = message.text;
+      text = this.replaceMsg(text, message.ts, name, img, placeMsg, sound);
+      if (text == undefined) return;
+      let isMyMessage = localStorage.getItem("user") == message.user;
+      let tplName = isMyMessage ? "myMsg" : "opponentMsg";
+      if (tplName == "opponentMsg") sound.play();
+      let tpl = readTemplate(tplName);
+      text =
+        sendImg && sendImg.thumb_360
+          ? `<img src="${sendImg.thumb_360}">`
+          : text;
+      placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+        name: name,
+        img: img,
+        text: text
+      });
+      placeMsg.scrollTop = placeMsg.scrollHeight;
+    });
+  }
+
+  wsMsg() {
+    let ur, message;
+    let token = localStorage.getItem("token");
+    slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
+      let ws = new WebSocket(`${ur}`);
+      let globalThis = this;
+      ws.onopen = function() {};
+      ws.onmessage = function(event) {
+        let typeMessage = JSON.parse(event.data);
+        if (typeMessage.type == "channel_archive") {
+          globalThis.removeChannelDOM(typeMessage);
+        }
+        if (typeMessage.type == "channel_created") {
+          globalThis.renderNewChannel(typeMessage);
+        }
+        if (typeMessage.type == "message") {
           message = JSON.parse(event.data);
-          let sendImg = message.file;
-          if (
-            message.ts == "1501544614.596385" ||
-            message.ts == "1501796123.395835"
-          ) {
-            return;
-          }
-          userName = message.user;
-          slackApi.userInfo(token, userName).then(data => {
-            if (data.user == undefined) return;
-            name = data.user.name;
-            img = data.user.profile.image_32;
-            let text = message.text;
-            text = text.replace(
-              /<(http.+?)>/g,
-              '<a href="$1" target="_blank">$1</a>'
-            );
-            if (text.indexOf("&lt;map&gt;") == 0) {
-              text = text.split("&lt;map&gt;");
-              text = text.splice(1, 11).join(",");
-              text = text.split(",");
-              text.push(message.ts);
-              let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
-              let tpl = document.getElementById("myMsg").innerHTML;
-              placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                name: name,
-                img: img,
-                text: div
-              });
-              globalThis.sendCoords(text);
-              sound.play();
-              placeMsg.scrollTop = placeMsg.scrollHeight;
-            } else {
-              if (
-                localStorage.getItem("channel") == message.channel &&
-                localStorage.getItem("user") == message.user
-              ) {
-                if (sendImg != undefined && sendImg.thumb_360 != undefined) {
-                  sendImg = sendImg.thumb_360;
-                  let text = `<img src="${sendImg}">`;
-                  let tpl = document.getElementById("myMsg").innerHTML;
-                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                    name: name,
-                    img: img,
-                    text: text
-                  });
-                } else {
-                  let tpl = document.getElementById("myMsg").innerHTML;
-                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                    name: name,
-                    img: img,
-                    text: text
-                  });
-                }
-              } else {
-                sound.play();
-                let sendImg = message.file;
-                if (sendImg != undefined && sendImg.thumb_360 != undefined) {
-                  sendImg = sendImg.thumb_360;
-                  let text = `<img src="${sendImg}">`;
-                  let tpl = document.getElementById("opponentMsg").innerHTML;
-                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                    name: name,
-                    img: img,
-                    text: text
-                  });
-                } else {
-                  let tpl = document.getElementById("opponentMsg").innerHTML;
-                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                    name: name,
-                    img: img,
-                    text: text
-                  });
-                }
-              }
-              placeMsg.scrollTop = placeMsg.scrollHeight;
-            }
-          });
+          if (localStorage.getItem("channel") != message.channel) return;
+          globalThis.renderMsg(message, token);
         }
       };
     });
