@@ -1,6 +1,8 @@
 import SlackApi from "../utils/SlackAPI";
+import RenderTemplate from "../utils/RenderTemplate";
 
 let slackApi = new SlackApi();
+let rendertpl = new RenderTemplate();
 
 class mainPage {
   check() {
@@ -25,9 +27,7 @@ class mainPage {
             slackApi.readRoomMessages(room).then(data => {
               let leng = data.messages.length - 1;
               let placeMsg = document.querySelector(".workPlace");
-              let text;
-              let name;
-              let img;
+              let text, name, img;
               placeMsg.innerHTML = "";
               if (leng == -1) return;
               slackApi.userList(token).then(userInfo => {
@@ -44,11 +44,12 @@ class mainPage {
                         img = userInfo.members[i].profile.image_32;
                       }
                     }
-                    placeMsg.innerHTML += `<div class="myMsg">
-                    <span class="name">${name}</span><br>
-                    <img class="myImgCss myMsgImg" src="${img}" width="40" height="40">
-                    <div class="msg">${text}</div>
-                </div>`;
+                    let tpl = document.getElementById("myMsg").innerHTML;
+                    placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                      name: name,
+                      img: img,
+                      text: text
+                    });
                   } else {
                     for (let i = 0; i < userInfo.members.length; i++) {
                       if (userInfo.members[i].id == data.messages[leng].user) {
@@ -56,11 +57,12 @@ class mainPage {
                         img = userInfo.members[i].profile.image_32;
                       }
                     }
-                    placeMsg.innerHTML += `<div class="opponentMsg">
-                    <span class="name">${name}</span><br>
-                    <img class="myImgCss opponentMsgImg" src="${img}" width="40" height="40">
-                    <div class="msg">${text}</div>
-                </div>`;
+                    let tpl = document.getElementById("opponentMsg").innerHTML;
+                    placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                      name: name,
+                      img: img,
+                      text: text
+                    });
                     document.querySelector(".nameGroup").innerHTML = "@" + name;
                   }
                   leng = leng - 1;
@@ -148,8 +150,7 @@ class mainPage {
     let channel = localStorage.getItem("channel");
     let user = localStorage.getItem("user");
     let placeMsg = document.querySelector(".workPlace");
-    let img;
-    let name;
+    let img, name;
     slackApi.channelsHistory(token, channel).then(data => {
       slackApi.userList(token).then(userInfo => {
         let leng = data.messages.length - 1;
@@ -168,7 +169,12 @@ class mainPage {
             txt.push(leng);
             let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
             // ЕСТЬ ВОПРОС!
-            placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40"> <div class="msg">${div}</div> </div>`;
+            let tpl = document.getElementById("myMsg").innerHTML;
+            placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+              name: name,
+              img: img,
+              text: div
+            });
             this.sendCoords(txt);
           } else {
             if (localStorage.getItem("user") == data.messages[leng].user) {
@@ -181,10 +187,21 @@ class mainPage {
               if (data.messages[leng].file != undefined) {
                 if (data.messages[leng].file.thumb_360 != undefined) {
                   let sendImg = data.messages[leng].file.thumb_360;
-                  placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg"><img src="${sendImg}"></div> </div>`;
+                  let text = `<img src="${sendImg}">`;
+                  let tpl = document.getElementById("myMsg").innerHTML;
+                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                    name: name,
+                    img: img,
+                    text: text
+                  });
                 }
               } else {
-                placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${txt}</div> </div>`;
+                let tpl = document.getElementById("myMsg").innerHTML;
+                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                  name: name,
+                  img: img,
+                  text: txt
+                });
               }
             } else {
               for (let i = 0; i < userInfo.members.length; i++) {
@@ -193,15 +210,25 @@ class mainPage {
                   img = userInfo.members[i].profile.image_32;
                 }
               }
-              if (data.messages[leng].file != undefined) {
-                if (data.messages[leng].file.thumb_360 != undefined) {
-                  let sendImg = data.messages[leng].file.thumb_360;
-                  placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg"><img src="${sendImg}"></div></div></div>`;
-                } else {
-                  placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
-                }
+              if (
+                data.messages[leng].file != undefined &&
+                data.messages[leng].file.thumb_360 != undefined
+              ) {
+                let sendImg = data.messages[leng].file.thumb_360;
+                let text = `<img src="${sendImg}">`;
+                let tpl = document.getElementById("opponentMsg").innerHTML;
+                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                  name: name,
+                  img: img,
+                  text: text
+                });
               } else {
-                placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span> <br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${txt}</div></div>`;
+                let tpl = document.getElementById("opponentMsg").innerHTML;
+                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                  name: name,
+                  img: img,
+                  text: txt
+                });
               }
             }
           }

@@ -42,10 +42,18 @@
         //= templates/mainChat.html
     </script>
     <script type="html/template" id="myMsg">
-        //= templates/myMsg.html
+        <div class="myMsg">
+            <span class="name">${name}</span><br>
+            <img class="myImgCss myMsgImg" src="${img}" width="40" height="40">
+            <div class="msg">${text}</div>
+        </div>
     </script>
     <script type="html/template" id="opponentMsg">
-        //= templates/opponentMsg.html
+        <div class="opponentMsg">
+            <span class="name">${name}</span><br>
+            <img class="myImgCss opponentMsgImg" src="${img}" width="40" height="40">
+            <div class="msg">${text}</div>
+        </div>
     </script>
     <script type="html/template" id="contacts">
         //= templates/contacts.html
