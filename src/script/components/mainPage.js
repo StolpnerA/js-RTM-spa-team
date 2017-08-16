@@ -86,8 +86,8 @@ class mainPage {
         .then(this.channelList())
         .then(this.wsMsg())
         .then(this.exit())
-        .then(this.HandlerMenuChatBtn())
-        .then(this.GetYandexMap());
+        .then(this.handlerMenuChatBtn())
+        .then(this.getYandexMap());
     } else {
       slackApi
         .oAuthAccess()
@@ -105,8 +105,8 @@ class mainPage {
         .then(() => this.channelList())
         .then(() => this.wsMsg())
         .then(() => this.exit())
-        .then(() => this.HandlerMenuChatBtn())
-        .then(() => this.GetYandexMap());
+        .then(() => this.handlerMenuChatBtn())
+        .then(() => this.getYandexMap());
     }
   }
 
@@ -264,7 +264,6 @@ class mainPage {
   }
 
   channelList() {
-    let channelId, channelName;
     let token = localStorage.getItem("token");
     let divChannels = $$(".channels");
     let nameGroup = $$(".nameGroup");
@@ -276,12 +275,10 @@ class mainPage {
             nameGroup.innerHTML = data.channels[i].name_normalized;
           }
           if (data.channels[i].is_archived != false) continue;
-          channelId = data.channels[i].id;
-          channelName = data.channels[i].name;
           let tpl = readTemplate("channelsList");
           divChannels.innerHTML += rendertpl.compileTpl(tpl, {
-            channelId: channelId,
-            channelName: channelName
+            channelId: data.channels[i].id,
+            channelName: data.channels[i].name
           });
         }
       })
@@ -289,13 +286,11 @@ class mainPage {
   }
 
   renderNewChannel(typeMessage) {
-    let channelId = typeMessage.channel.id;
-    let channelName = typeMessage.channel.name;
     let divChannels = $$(".channels");
     let tpl = readTemplate("channelsList");
     divChannels.innerHTML += rendertpl.compileTpl(tpl, {
-      channelId: channelId,
-      channelName: channelName
+      channelId: typeMessage.channel.id,
+      channelName: typeMessage.channel.name
     });
   }
 
@@ -307,10 +302,12 @@ class mainPage {
   replaceMsg(text, count, name, img, placeMsg, sound) {
     text = text.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
     if (text.indexOf("&lt;map&gt;") == 0) {
-      text = text.split("&lt;map&gt;");
-      text = text.splice(1, 11).join(",");
-      text = text.split(",");
-      text.push(count);
+      text = text
+        .split("&lt;map&gt;")
+        .splice(1, 11)
+        .join(",")
+        .split(",")
+        .push(count);
       let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
       let tpl = readTemplate("myMsg");
       placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
@@ -327,9 +324,6 @@ class mainPage {
   }
 
   renderMsg(message, token) {
-    let placeMsg = $$(".workPlace");
-    let sound = $$("#audio");
-    let sendImg = message.file;
     // Костыль для бага с сообщениями, которые приходят непонятно от куда
     if (
       message.ts == "1501544614.596385" ||
@@ -337,6 +331,9 @@ class mainPage {
     ) {
       return;
     }
+    let placeMsg = $$(".workPlace");
+    let sound = $$("#audio");
+    let sendImg = message.file;
     let userName = message.user;
     slackApi.userInfo(token, userName).then(data => {
       if (data.user == undefined) return;
@@ -394,28 +391,10 @@ class mainPage {
         this.addNewChannel();
       }
       if (target.tagName == "I" && target.id == "removeChannel") {
-        let className = target.className;
-        className = className.split("channel_")[1];
-        slackApi.channelArchive(token, className).then(
-          slackApi
-            .channelLeave(token, className)
-            .then(localStorage.setItem("channel", "C6CS9BNG3")) // есть косяк, в других чатах не будет перезходить на general
-            .then(this.loadhistoryMessage())
-        );
+        this.removeChannel(token, target.className);
       }
       if (target.tagName == "SPAN" || target.tagName == "IMG") {
-        let className = target.className;
-        className = className.split("channel_")[1];
-        localStorage.setItem(
-          "channel",
-          className.split("channelName_")[0].slice(0, -1)
-        );
-        let nameGroupTag = $$(".nameGroup");
-        let channelName = className.split("channelName_")[1];
-        nameGroupTag.innerHTML = "# " + channelName;
-        slackApi
-          .channelJoin(token, channelName)
-          .then(this.loadhistoryMessage());
+        this.joinChannel(token, target.className);
       }
     });
   }
@@ -518,6 +497,28 @@ class mainPage {
     });
   }
 
+  removeChannel(token, className) {
+    className = className.split("channel_")[1];
+    slackApi.channelArchive(token, className).then(
+      slackApi
+        .channelLeave(token, className)
+        .then(localStorage.setItem("channel", "C6CS9BNG3")) // есть косяк, в других чатах не будет перезходить на general
+        .then(this.loadhistoryMessage())
+    );
+  }
+
+  joinChannel(token, className) {
+    className = className.split("channel_")[1];
+    localStorage.setItem(
+      "channel",
+      className.split("channelName_")[0].slice(0, -1)
+    );
+    let nameGroupTag = $$(".nameGroup");
+    let channelName = className.split("channelName_")[1];
+    nameGroupTag.innerHTML = "# " + channelName;
+    slackApi.channelJoin(token, channelName).then(this.loadhistoryMessage());
+  }
+
   exit() {
     $$(".exit").addEventListener("click", () => {
       localStorage.removeItem("token");
@@ -527,7 +528,7 @@ class mainPage {
     });
   }
 
-  HandlerMenuChatBtn() {
+  handlerMenuChatBtn() {
     let btn = $$(".menuChat");
     let dialogInfoChat = $$("#dialogForChat");
     if (!dialogInfoChat.showModal) {
@@ -538,7 +539,7 @@ class mainPage {
       let location = dialogInfoChat.querySelector(".location");
       let senFile = dialogInfoChat.querySelector("#file-select");
       location.addEventListener("click", () => {
-        this.GetLocation();
+        this.getLocation();
         dialogInfoChat.close();
       });
       senFile.addEventListener("click", () => {
@@ -553,7 +554,7 @@ class mainPage {
       });
   }
 
-  GetLocation() {
+  getLocation() {
     let dialogForSetMap = $$("#dialogForSetMap");
     if (!dialogForSetMap.showModal) {
       dialogPolyfill.registerDialog(dialogForSetMap);
@@ -566,9 +567,9 @@ class mainPage {
       });
   }
 
-  GetYandexMap() {
+  getYandexMap() {
     ymaps.ready(init.bind(this));
-    var myMap;
+    let myMap;
 
     function init() {
       myMap = new ymaps.Map(
@@ -590,14 +591,13 @@ class mainPage {
       );
       $$("#map").addEventListener("click", ev => {
         if (!ev.target.matches(".sendCoords")) return;
-        /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
         if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
           myMap.balloon.onSendCoordsClick();
         }
       });
       myMap.events.add("click", e => {
         if (!myMap.balloon.isOpen()) {
-          var coords = e.get("coords");
+          let coords = e.get("coords");
           myMap.balloon.open(coords, {
             contentHeader: "Event",
             contentBody:
@@ -623,7 +623,7 @@ class mainPage {
 
   sendCoords(coords) {
     ymaps.ready(init);
-    var myMap, myPlacemark;
+    let myMap, myPlacemark;
 
     function init() {
       myMap = new ymaps.Map(`mapSend${coords[2]}`, {
@@ -643,16 +643,16 @@ class mainPage {
   attachFile() {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    var form = document.getElementById("myform");
-    var fileSelect = document.getElementById("file-select");
+    let form = document.getElementById("myform");
+    let fileSelect = document.getElementById("file-select");
 
     fileSelect.addEventListener("change", () => {
-      var file = fileSelect.files[0];
-      var formData = new FormData();
+      let file = fileSelect.files[0];
+      let formData = new FormData();
       formData.append("file", file, file.name);
       formData.append("token", `${token}`);
       formData.append("channels", `${channel}`);
-      var xhr = new XMLHttpRequest();
+      let xhr = new XMLHttpRequest();
       xhr.open("POST", "https://slack.com/api/files.upload", true);
       xhr.onload = function() {
         if (xhr.status === 200) {
