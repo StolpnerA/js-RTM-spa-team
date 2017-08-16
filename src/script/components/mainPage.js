@@ -86,8 +86,8 @@ class mainPage {
         .then(this.channelList())
         .then(this.wsMsg())
         .then(this.exit())
-        .then(this.handlerMenuChatBtn())
-        .then(this.getYandexMap());
+        .then(this.HandlerMenuChatBtn())
+        .then(this.GetYandexMap());
     } else {
       slackApi
         .oAuthAccess()
@@ -105,8 +105,8 @@ class mainPage {
         .then(() => this.channelList())
         .then(() => this.wsMsg())
         .then(() => this.exit())
-        .then(() => this.handlerMenuChatBtn())
-        .then(() => this.getYandexMap());
+        .then(() => this.HandlerMenuChatBtn())
+        .then(() => this.GetYandexMap());
     }
   }
 
@@ -302,12 +302,11 @@ class mainPage {
   replaceMsg(text, count, name, img, placeMsg, sound) {
     text = text.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
     if (text.indexOf("&lt;map&gt;") == 0) {
-      text = text
-        .split("&lt;map&gt;")
-        .splice(1, 11)
-        .join(",")
-        .split(",")
-        .push(count);
+      text = text.split("&lt;map&gt;");
+      text = text.splice(1, 11).join(",");
+      text = text.split(",");
+      text.push(count);
+
       let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
       let tpl = readTemplate("myMsg");
       placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
@@ -315,6 +314,7 @@ class mainPage {
         img: img,
         text: div
       });
+
       this.sendCoords(text);
       sound.play();
       text = undefined;
@@ -528,7 +528,7 @@ class mainPage {
     });
   }
 
-  handlerMenuChatBtn() {
+  HandlerMenuChatBtn() {
     let btn = $$(".menuChat");
     let dialogInfoChat = $$("#dialogForChat");
     if (!dialogInfoChat.showModal) {
@@ -539,7 +539,7 @@ class mainPage {
       let location = dialogInfoChat.querySelector(".location");
       let senFile = dialogInfoChat.querySelector("#file-select");
       location.addEventListener("click", () => {
-        this.getLocation();
+        this.GetLocation();
         dialogInfoChat.close();
       });
       senFile.addEventListener("click", () => {
@@ -554,7 +554,7 @@ class mainPage {
       });
   }
 
-  getLocation() {
+  GetLocation() {
     let dialogForSetMap = $$("#dialogForSetMap");
     if (!dialogForSetMap.showModal) {
       dialogPolyfill.registerDialog(dialogForSetMap);
@@ -567,9 +567,9 @@ class mainPage {
       });
   }
 
-  getYandexMap() {
+  GetYandexMap() {
     ymaps.ready(init.bind(this));
-    let myMap;
+    var myMap;
 
     function init() {
       myMap = new ymaps.Map(
@@ -591,13 +591,14 @@ class mainPage {
       );
       $$("#map").addEventListener("click", ev => {
         if (!ev.target.matches(".sendCoords")) return;
+        /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
         if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
           myMap.balloon.onSendCoordsClick();
         }
       });
       myMap.events.add("click", e => {
         if (!myMap.balloon.isOpen()) {
-          let coords = e.get("coords");
+          var coords = e.get("coords");
           myMap.balloon.open(coords, {
             contentHeader: "Event",
             contentBody:
@@ -623,7 +624,7 @@ class mainPage {
 
   sendCoords(coords) {
     ymaps.ready(init);
-    let myMap, myPlacemark;
+    var myMap, myPlacemark;
 
     function init() {
       myMap = new ymaps.Map(`mapSend${coords[2]}`, {
@@ -643,16 +644,16 @@ class mainPage {
   attachFile() {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    let form = document.getElementById("myform");
-    let fileSelect = document.getElementById("file-select");
+    var form = document.getElementById("myform");
+    var fileSelect = document.getElementById("file-select");
 
     fileSelect.addEventListener("change", () => {
-      let file = fileSelect.files[0];
-      let formData = new FormData();
+      var file = fileSelect.files[0];
+      var formData = new FormData();
       formData.append("file", file, file.name);
       formData.append("token", `${token}`);
       formData.append("channels", `${channel}`);
-      let xhr = new XMLHttpRequest();
+      var xhr = new XMLHttpRequest();
       xhr.open("POST", "https://slack.com/api/files.upload", true);
       xhr.onload = function() {
         if (xhr.status === 200) {
