@@ -19,18 +19,6 @@ class SlackAPI {
       });
   }
 
-  readLocalToken() {
-    let token = localStorage.getItem("token");
-
-    if (token == "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("channel");
-      localStorage.removeItem("user");
-      location.hash = "";
-    }
-    return token;
-  }
-
   readRoomMessages(room, token) {
     token = token || this.token;
     let promise = fetch(
@@ -46,7 +34,12 @@ class SlackAPI {
       `https://slack.com/api/users.list?token=${token}&pretty=1`
     ).then(response => response.json());
   }
-  oAuthAccess(code) {
+  oAuthAccess() {
+    let code = location.href;
+    code = code.split("?");
+    code = code.splice(1, 1);
+    code = String(code);
+    code = code.slice(5).split("&")[0];
     return fetch(
       `https://slack.com/api/oauth.access?client_id=217857254422.216894611363&client_secret=73b8f39e3b53e9635094ae7ce4d1bf69&code=${code}`
     ).then(response => response.json());

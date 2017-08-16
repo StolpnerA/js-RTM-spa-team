@@ -4,72 +4,80 @@ import RenderTemplate from "../utils/RenderTemplate";
 let slackApi = new SlackApi();
 let rendertpl = new RenderTemplate();
 
+let $$ = str => document.querySelector(str);
+let readTemplate = str => $$(`#${str}`).innerHTML;
+
 class mainPage {
+  printMessages(userInfo, message, placeMsg) {
+    let name, img;
+    let text = message.text;
+    let isMyMessage = localStorage.getItem("user") == message.user;
+    let tplName = isMyMessage ? "myMsg" : "opponentMsg";
+    let tpl = readTemplate(tplName);
+    let idUser = isMyMessage ? localStorage.getItem("user") : message.user;
+    for (let i = 0; i < userInfo.members.length; i++) {
+      if (userInfo.members[i].id == idUser) {
+        name = userInfo.members[i].name;
+        img = userInfo.members[i].profile.image_32;
+      }
+      if (!isMyMessage) $$(".nameGroup").innerHTML = "@" + name;
+    }
+
+    placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+      name: name,
+      img: img,
+      text: text
+    });
+  }
+
+  loadDirectMsg(choosingRoom) {
+    let room = choosingRoom.join("");
+    let token = localStorage.getItem("token");
+    let placeMsg = $$(".workPlace");
+
+    slackApi.readRoomMessages(room).then(data => {
+      let leng = data.messages.length - 1;
+      if (leng == -1) return;
+      slackApi.userList(token).then(userInfo => {
+        do {
+          let message = data.messages[leng];
+          this.printMessages(userInfo, message, placeMsg);
+          leng = leng - 1;
+        } while (leng >= 0);
+      });
+      placeMsg.scrollTop = placeMsg.scrollHeight;
+    });
+  }
+
+  readLocalToken() {
+    let token = localStorage.getItem("token");
+
+    if (token == "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("channel");
+      localStorage.removeItem("user");
+      location.hash = "";
+    }
+    return token;
+  }
+
   check() {
     if (localStorage.getItem("token")) {
       localStorage.getItem("channel") ||
         localStorage.setItem("channel", "C6CS9BNG3");
 
-      let token = slackApi.readLocalToken();
+      let token = this.readLocalToken();
 
       slackApi
         .checkTocken(token)
         .then(this.render())
-        .then(this.Handlers())
+        .then(this.handlers())
         .then(this.userInfo())
         .then(() => {
           let choosingRoom = localStorage.getItem("channel");
           choosingRoom = choosingRoom.split("");
           if (choosingRoom[0] == "D") {
-            let room = choosingRoom.join("");
-            let token = localStorage.getItem("token");
-
-            slackApi.readRoomMessages(room).then(data => {
-              let leng = data.messages.length - 1;
-              let placeMsg = document.querySelector(".workPlace");
-              let text, name, img;
-              placeMsg.innerHTML = "";
-              if (leng == -1) return;
-              slackApi.userList(token).then(userInfo => {
-                do {
-                  text = data.messages[leng].text;
-                  if (
-                    localStorage.getItem("user") == data.messages[leng].user
-                  ) {
-                    for (let i = 0; i < userInfo.members.length; i++) {
-                      if (
-                        userInfo.members[i].id == localStorage.getItem("user")
-                      ) {
-                        name = userInfo.members[i].name;
-                        img = userInfo.members[i].profile.image_32;
-                      }
-                    }
-                    let tpl = document.getElementById("myMsg").innerHTML;
-                    placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                      name: name,
-                      img: img,
-                      text: text
-                    });
-                  } else {
-                    for (let i = 0; i < userInfo.members.length; i++) {
-                      if (userInfo.members[i].id == data.messages[leng].user) {
-                        name = userInfo.members[i].name;
-                        img = userInfo.members[i].profile.image_32;
-                      }
-                    }
-                    let tpl = document.getElementById("opponentMsg").innerHTML;
-                    placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                      name: name,
-                      img: img,
-                      text: text
-                    });
-                    document.querySelector(".nameGroup").innerHTML = "@" + name;
-                  }
-                  leng = leng - 1;
-                } while (leng >= 0);
-                placeMsg.scrollTop = placeMsg.scrollHeight;
-              });
-            });
+            this.loadDirectMsg(choosingRoom);
           } else if (choosingRoom[0] == "C") {
             this.loadhistoryMessage();
           }
@@ -81,38 +89,34 @@ class mainPage {
         .then(this.HandlerMenuChatBtn())
         .then(this.GetYandexMap());
     } else {
-      let code = location.href;
-      code = code.split("?");
-      code = code.splice(1, 1);
-      code = String(code);
-      code = code.slice(5).split("&")[0];
-      slackApi.OAuthAccess(code).then(data => {
-        localStorage.setItem("channel", "C6CS9BNG3");
-        let token = data.access_token;
-        localStorage.setItem("token", `${token}`);
-        localStorage.setItem("user", `${data.user_id}`);
-        Promise.resolve()
-          .then(this.render())
-          .then(this.Handlers())
-          .then(this.userInfo())
-          .then(this.loadhistoryMessage())
-          .then(this.loadUsers())
-          .then(this.channelList())
-          .then(this.wsMsg())
-          .then(this.exit())
-          .then(this.HandlerMenuChatBtn())
-          .then(this.GetYandexMap());
-      });
+      slackApi
+        .oAuthAccess()
+        .then(data => {
+          localStorage.setItem("channel", "C6CS9BNG3");
+          let token = data.access_token;
+          localStorage.setItem("token", `${token}`);
+          localStorage.setItem("user", `${data.user_id}`);
+        })
+        .then(() => this.render())
+        .then(() => this.handlers())
+        .then(() => this.userInfo())
+        .then(() => this.loadhistoryMessage())
+        .then(() => this.loadUsers())
+        .then(() => this.channelList())
+        .then(() => this.wsMsg())
+        .then(() => this.exit())
+        .then(() => this.HandlerMenuChatBtn())
+        .then(() => this.GetYandexMap());
     }
   }
 
   render() {
-    let place = document.querySelector("div.conteiner");
+    let place = $$("div.conteiner");
     place.innerHTML = document.getElementById("mainChat").innerHTML;
   }
 
-  Handlers() {
-    document.querySelector(".sendMessage").addEventListener("keypress", e => {
+  handlers() {
+    $$(".sendMessage").addEventListener("keypress", e => {
       let key = e.which || e.keyCode;
       if (key === 13) {
         e.preventDefault();
@@ -124,24 +128,21 @@ class mainPage {
   sendMessage(coords) {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    let message = document.querySelector(".sendMessage").value;
+    let message = $$(".sendMessage").value;
     let user = localStorage.getItem("user");
-    if (!coords && message) {
-      message = message.replace(/\&/g, "%26");
-      message = message.replace(/\?/g, "%20%3F");
-      slackApi.chatPostMsg(token, channel, message, user);
-    } else {
-      coords = `<map> ${coords}`;
-      slackApi.chatPostMsg(token, channel, coords, user);
-    }
+    message =
+      !coords && message
+        ? message.replace(/\&/g, "%26").replace(/\?/g, "%20%3F")
+        : `<map> ${coords}`;
+    slackApi.chatPostMsg(token, channel, message, user);
   }
 
   userInfo() {
     let token = localStorage.getItem("token");
     let user = localStorage.getItem("user");
     slackApi.userInfo(token, user).then(data => {
-      document.querySelector(".userName").innerHTML = `<img src="${data.user
-        .profile.image_32}"> ${data.user.name}`;
+      $$(".userName").innerHTML = `<img src="${data.user.profile
+        .image_32}"> ${data.user.name}`;
     });
   }
 
@@ -149,7 +150,7 @@ class mainPage {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
     let user = localStorage.getItem("user");
-    let placeMsg = document.querySelector(".workPlace");
+    let placeMsg = $$(".workPlace");
     let img, name;
     slackApi.channelsHistory(token, channel).then(data => {
       slackApi.userList(token).then(userInfo => {
@@ -241,7 +242,7 @@ class mainPage {
 
   loadUsers() {
     let userId, userName, img;
-    let divContacts = document.querySelector(".contacts");
+    let divContacts = $$(".contacts");
     let token = localStorage.getItem("token");
     slackApi
       .userList(token)
@@ -264,7 +265,7 @@ class mainPage {
   channelList() {
     let token = localStorage.getItem("token");
     let channelId, channelName;
-    let divChannels = document.querySelector(".channels");
+    let divChannels = $$(".channels");
     slackApi
       .channelList(token)
       .then(data => {
@@ -279,7 +280,7 @@ class mainPage {
             });
           }
         }
-        let nameGroup = document.querySelector(".nameGroup");
+        let nameGroup = $$(".nameGroup");
         for (let i = 0; i < data.channels.length; i++) {
           if (data.channels[i].id == localStorage.getItem("channel")) {
             nameGroup.innerHTML = data.channels[i].name_normalized;
@@ -291,9 +292,9 @@ class mainPage {
 
   wsMsg() {
     let ur, data, img, userName;
-    let placeMsg = document.querySelector(".workPlace");
+    let placeMsg = $$(".workPlace");
     let token = localStorage.getItem("token");
-    let sound = document.querySelector("#audio");
+    let sound = $$("#audio");
     let user = localStorage.getItem("user");
     slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
       let message, name;
@@ -304,12 +305,12 @@ class mainPage {
         let TypeMessage = JSON.parse(event.data);
         if (TypeMessage.type == "channel_archive") {
           let channel = TypeMessage.channel;
-          document.querySelector(`.channel_${channel}`).remove();
+          $$(`.channel_${channel}`).remove();
         }
         if (TypeMessage.type == "channel_created") {
           let channelId = TypeMessage.channel.id;
           let channelName = TypeMessage.channel.name;
-          let divChannels = document.querySelector(".channels");
+          let divChannels = $$(".channels");
           let tpl = document.getElementById("channelsList").innerHTML;
           divChannels.innerHTML += rendertpl.compileTpl(tpl, {
             channelId: channelId,
@@ -425,7 +426,7 @@ class mainPage {
           "channel",
           className.split("channelName_")[0].slice(0, -1)
         );
-        let nameGroupTag = document.querySelector(".nameGroup");
+        let nameGroupTag = $$(".nameGroup");
         let channelName = className.split("channelName_")[1];
         nameGroupTag.innerHTML = "# " + channelName;
         slackApi
@@ -447,7 +448,7 @@ class mainPage {
           "channel",
           className.split("userName_")[0].slice(0, -1)
         );
-        let nameGroupTag = document.querySelector(".nameGroup");
+        let nameGroupTag = $$(".nameGroup");
         let channelName = className.split("userName_")[1];
         nameGroupTag.innerHTML = "@ " + channelName;
         slackApi.imList(token).then(data => {
@@ -458,7 +459,7 @@ class mainPage {
               slackApi.imHistory(token, room).then(data => {
                 localStorage.setItem("channel", room);
                 let leng = data.messages.length - 1;
-                let placeMsg = document.querySelector(".workPlace");
+                let placeMsg = $$(".workPlace");
                 let text, name, img;
                 placeMsg.innerHTML = "";
                 if (leng != -1) {
@@ -514,7 +515,7 @@ class mainPage {
   }
 
   addNewChannel() {
-    let dialog = document.querySelector("#dialogForNewChannel");
+    let dialog = $$("#dialogForNewChannel");
     if (!dialog.showModal) {
       dialogPolyfill.registerDialog(dialog);
     } else dialog.showModal();
@@ -534,7 +535,7 @@ class mainPage {
   }
 
   exit() {
-    document.querySelector(".exit").addEventListener("click", () => {
+    $$(".exit").addEventListener("click", () => {
       localStorage.removeItem("token");
       localStorage.removeItem("channel");
       localStorage.removeItem("user");
@@ -543,8 +544,8 @@ class mainPage {
   }
 
   HandlerMenuChatBtn() {
-    let btn = document.querySelector(".menuChat");
-    let dialogInfoChat = document.querySelector("#dialogForChat");
+    let btn = $$(".menuChat");
+    let dialogInfoChat = $$("#dialogForChat");
     if (!dialogInfoChat.showModal) {
       dialogPolyfill.registerDialog(dialogInfoChat);
     }
@@ -569,7 +570,7 @@ class mainPage {
   }
 
   GetLocation() {
-    let dialogForSetMap = document.querySelector("#dialogForSetMap");
+    let dialogForSetMap = $$("#dialogForSetMap");
     if (!dialogForSetMap.showModal) {
       dialogPolyfill.registerDialog(dialogForSetMap);
     }
@@ -603,7 +604,7 @@ class mainPage {
           searchControlProvider: "yandex#search"
         }
       );
-      document.querySelector("#map").addEventListener("click", ev => {
+      $$("#map").addEventListener("click", ev => {
         if (!ev.target.matches(".sendCoords")) return;
         /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
         if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
