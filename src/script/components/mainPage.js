@@ -168,7 +168,6 @@ class mainPage {
             txt = txt.split(",");
             txt.push(leng);
             let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
-            // ЕСТЬ ВОПРОС!
             let tpl = document.getElementById("myMsg").innerHTML;
             placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
               name: name,
@@ -184,17 +183,18 @@ class mainPage {
                   img = userInfo.members[i].profile.image_32;
                 }
               }
-              if (data.messages[leng].file != undefined) {
-                if (data.messages[leng].file.thumb_360 != undefined) {
-                  let sendImg = data.messages[leng].file.thumb_360;
-                  let text = `<img src="${sendImg}">`;
-                  let tpl = document.getElementById("myMsg").innerHTML;
-                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
-                    name: name,
-                    img: img,
-                    text: text
-                  });
-                }
+              if (
+                data.messages[leng].file != undefined &&
+                data.messages[leng].file.thumb_360 != undefined
+              ) {
+                let sendImg = data.messages[leng].file.thumb_360;
+                let text = `<img src="${sendImg}">`;
+                let tpl = document.getElementById("myMsg").innerHTML;
+                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                  name: name,
+                  img: img,
+                  text: text
+                });
               } else {
                 let tpl = document.getElementById("myMsg").innerHTML;
                 placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
@@ -240,9 +240,7 @@ class mainPage {
   }
 
   loadUsers() {
-    let userId;
-    let userName;
-    let img;
+    let userId, userName, img;
     let divContacts = document.querySelector(".contacts");
     let token = localStorage.getItem("token");
     slackApi
@@ -252,10 +250,12 @@ class mainPage {
           userId = data.members[i].id;
           userName = data.members[i].name;
           img = data.members[i].profile.image_32;
-          divContacts.innerHTML += ` <span class="mdl-chip mdl-chip--contact mdl-chip--deletable user_${userId} userName_${userName}">
-                <img class="mdl-chip__contact user_${userId} userName_${userName}" src="${img}">
-                <span class="mdl-chip__text user_${userId} userName_${userName}">${userName}</span>
-                    </span>`;
+          let tpl = document.getElementById("contacts").innerHTML;
+          divContacts.innerHTML += rendertpl.compileTpl(tpl, {
+            userId: userId,
+            userName: userName,
+            img: img
+          });
         }
       })
       .then(() => this.heandlerMsgUsersClick(divContacts));
@@ -272,11 +272,11 @@ class mainPage {
           if (data.channels[i].is_archived == false) {
             channelId = data.channels[i].id;
             channelName = data.channels[i].name;
-            divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
-          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
-          <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
-           <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
-                    </span>`;
+            let tpl = document.getElementById("channelsList").innerHTML;
+            divChannels.innerHTML += rendertpl.compileTpl(tpl, {
+              channelId: channelId,
+              channelName: channelName
+            });
           }
         }
         let nameGroup = document.querySelector(".nameGroup");
@@ -290,18 +290,14 @@ class mainPage {
   }
 
   wsMsg() {
-    let ur;
-    let data;
+    let ur, data, img, userName;
     let placeMsg = document.querySelector(".workPlace");
     let token = localStorage.getItem("token");
-    let img;
     let sound = document.querySelector("#audio");
     let user = localStorage.getItem("user");
-    let userName;
     slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
-      let message;
+      let message, name;
       let ws = new WebSocket(`${ur}`);
-      let name;
       let globalThis = this;
       ws.onopen = function() {};
       ws.onmessage = function(event) {
@@ -314,15 +310,15 @@ class mainPage {
           let channelId = TypeMessage.channel.id;
           let channelName = TypeMessage.channel.name;
           let divChannels = document.querySelector(".channels");
-          divChannels.innerHTML += `<span class="mdl-chip mdl-chip--contact mdl-chip--deletable channel_${channelId} channelName_${channelName}">
-          <img class="mdl-chip__contact channel_${channelId} channelName_${channelName}" src="./img/group.png">
-          <span class="mdl-chip__text channel_${channelId} channelName_${channelName}">${channelName}</span>
-           <button type="button" class="mdl-chip__action"><i class="material-icons myCross channel_${channelId}" id="removeChannel">cancel</i></button>
-                    </span>`;
+          let tpl = document.getElementById("channelsList").innerHTML;
+          divChannels.innerHTML += rendertpl.compileTpl(tpl, {
+            channelId: channelId,
+            channelName: channelName
+          });
         }
-        TypeMessage = TypeMessage.type;
-        if (TypeMessage == "message") {
+        if (TypeMessage.type == "message") {
           message = JSON.parse(event.data);
+          let sendImg = message.file;
           if (
             message.ts == "1501544614.596385" ||
             message.ts == "1501796123.395835"
@@ -345,38 +341,59 @@ class mainPage {
               text = text.split(",");
               text.push(message.ts);
               let div = `<div id="mapSend${message.ts}" style="width: 100%; height: 200px"></div>`;
-              placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span> <br> <img class = "myImgCss myMsgImg" src=${img} width="40" height="40"> <div class="msg">${div}</div> </div>`;
+              let tpl = document.getElementById("myMsg").innerHTML;
+              placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                name: name,
+                img: img,
+                text: div
+              });
               globalThis.sendCoords(text);
               sound.play();
               placeMsg.scrollTop = placeMsg.scrollHeight;
             } else {
-              if (localStorage.getItem("channel") == message.channel) {
-                if (localStorage.getItem("user") == message.user) {
-                  let sendImg = message.file;
-                  if (sendImg != undefined) {
-                    if (sendImg.thumb_360 != undefined) {
-                      sendImg = sendImg.thumb_360;
-                      placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
-                    }
-                  } else {
-                    placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div></div>`;
-                  }
+              if (
+                localStorage.getItem("channel") == message.channel &&
+                localStorage.getItem("user") == message.user
+              ) {
+                if (sendImg != undefined && sendImg.thumb_360 != undefined) {
+                  sendImg = sendImg.thumb_360;
+                  let text = `<img src="${sendImg}">`;
+                  let tpl = document.getElementById("myMsg").innerHTML;
+                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                    name: name,
+                    img: img,
+                    text: text
+                  });
                 } else {
-                  sound.play();
-                  let sendImg = message.file;
-                  if (sendImg != undefined) {
-                    if (sendImg.thumb_360 != undefined) {
-                      sendImg = sendImg.thumb_360;
-                      placeMsg.innerHTML += ` <div class="opponentMsg"><span class="name">${name}</span><br> <img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40" >  <div class="msg"><img src="${sendImg}"></div> </div>`;
-                    } else {
-                      placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
-                    }
-                  } else {
-                    placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
-                  }
+                  let tpl = document.getElementById("myMsg").innerHTML;
+                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                    name: name,
+                    img: img,
+                    text: text
+                  });
                 }
-                placeMsg.scrollTop = placeMsg.scrollHeight;
+              } else {
+                sound.play();
+                let sendImg = message.file;
+                if (sendImg != undefined && sendImg.thumb_360 != undefined) {
+                  sendImg = sendImg.thumb_360;
+                  let text = `<img src="${sendImg}">`;
+                  let tpl = document.getElementById("opponentMsg").innerHTML;
+                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                    name: name,
+                    img: img,
+                    text: text
+                  });
+                } else {
+                  let tpl = document.getElementById("opponentMsg").innerHTML;
+                  placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                    name: name,
+                    img: img,
+                    text: text
+                  });
+                }
               }
+              placeMsg.scrollTop = placeMsg.scrollHeight;
             }
           });
         }
@@ -460,7 +477,12 @@ class mainPage {
                             img = userInfo.members[i].profile.image_32;
                           }
                         }
-                        placeMsg.innerHTML += ` <div class="myMsg"><span class="name">${name}</span><br> <img class = "myImgCss myMsgImg" src="${img}" width="40" height="40" >  <div class="msg">${text}</div> </div>`;
+                        let tpl = document.getElementById("myMsg").innerHTML;
+                        placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                          name: name,
+                          img: img,
+                          text: text
+                        });
                       } else {
                         for (let i = 0; i < userInfo.members.length; i++) {
                           if (
@@ -470,7 +492,13 @@ class mainPage {
                             img = userInfo.members[i].profile.image_32;
                           }
                         }
-                        placeMsg.innerHTML += `<div class="opponentMsg"><span class="name">${name}</span><br><img class = "myImgCss opponentMsgImg" src="${img}" width="40" height="40"  > <div class="msg">${text}</div></div>`;
+                        let tpl = document.getElementById("opponentMsg")
+                          .innerHTML;
+                        placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                          name: name,
+                          img: img,
+                          text: text
+                        });
                       }
                       leng = leng - 1;
                     } while (leng >= 0);
@@ -575,7 +603,6 @@ class mainPage {
           searchControlProvider: "yandex#search"
         }
       );
-
       document.querySelector("#map").addEventListener("click", ev => {
         if (!ev.target.matches(".sendCoords")) return;
         /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
@@ -583,13 +610,6 @@ class mainPage {
           myMap.balloon.onSendCoordsClick();
         }
       });
-
-      /**
-             * Processing events that occur when the user
-             * left-clicks anywhere on the map.
-             * When such an event occurs, we open the balloon
-             *
-             */
       myMap.events.add("click", e => {
         if (!myMap.balloon.isOpen()) {
           var coords = e.get("coords");
@@ -607,18 +627,9 @@ class mainPage {
           myMap.balloon.close();
         }
       });
-
-      /**
-             * Processing events that occur when the user
-             * right-clicks anywhere on the map.
-             * When such an event occurs, we display a popup hint
-             * at the point of click.
-             */
       myMap.events.add("contextmenu", function(e) {
         myMap.hint.open(e.get("coords"), "Someone right-clicked");
       });
-
-      // Hiding the hint when opening the balloon.
       myMap.events.add("balloonopen", function(e) {
         myMap.hint.close();
       });
@@ -651,10 +662,6 @@ class mainPage {
     var fileSelect = document.getElementById("file-select");
 
     fileSelect.addEventListener("change", () => {
-      // form.onsubmit = function(event) {
-      //   event.preventDefault();
-      // Update button text.
-      //uploadButton.innerText = "Uploading...";
       var file = fileSelect.files[0];
       var formData = new FormData();
       formData.append("file", file, file.name);
@@ -662,18 +669,14 @@ class mainPage {
       formData.append("channels", `${channel}`);
       var xhr = new XMLHttpRequest();
       xhr.open("POST", "https://slack.com/api/files.upload", true);
-
-      // Set up a handler for when the request finishes.
       xhr.onload = function() {
         if (xhr.status === 200) {
           // File(s) uploaded.
-          //uploadButton.innerText = "Uploaded";
         } else {
           alert("An error occurred!");
         }
       };
       xhr.send(formData);
-      //};
     });
   }
 }
