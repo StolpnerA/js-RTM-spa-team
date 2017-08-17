@@ -90,8 +90,8 @@ class MainPage {
       this.channelList();
       this.wsMsg();
       this.exit();
-      this.HandlerMenuChatBtn();
-      this.GetYandexMap();
+      this.handlerMenuChatBtn();
+      this.getYandexMap();
     } else {
       slackApi
         .oAuthAccess()
@@ -109,8 +109,8 @@ class MainPage {
         .then(() => this.channelList())
         .then(() => this.wsMsg())
         .then(() => this.exit())
-        .then(() => this.HandlerMenuChatBtn())
-        .then(() => this.GetYandexMap());
+        .then(() => this.handlerMenuChatBtn())
+        .then(() => this.getYandexMap());
     }
   }
 
@@ -541,11 +541,11 @@ class MainPage {
 
   onClickSelectLocationBinded() {
     let dialogInfoChat = this.getDialogForChat();
-    this.GetLocation();
+    this.getLocation();
     dialogInfoChat.close();
   }
 
-  HandlerMenuChatBtn() {
+  handlerMenuChatBtn() {
     let btn = $$(".menuChat");
     let dialogInfoChat = this.getDialogForChat();
     btn.addEventListener("click", () => {
@@ -566,7 +566,7 @@ class MainPage {
       });
   }
 
-  GetLocation() {
+  getLocation() {
     let dialogForSetMap = $$("#dialogForSetMap");
     if (!dialogForSetMap.showModal) {
       dialogPolyfill.registerDialog(dialogForSetMap);
@@ -579,11 +579,11 @@ class MainPage {
       });
   }
 
-  GetYandexMap() {
+  getYandexMap() {
     ymaps.ready(init.bind(this));
-    var myMap;
 
     function init() {
+      let myMap;
       myMap = new ymaps.Map(
         "map",
         {
@@ -603,15 +603,13 @@ class MainPage {
       );
       $$("#map").addEventListener("click", ev => {
         if (!ev.target.matches(".sendCoords")) return;
-
-        /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
         if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
           myMap.balloon.onSendCoordsClick();
         }
       });
       myMap.events.add("click", e => {
         if (!myMap.balloon.isOpen()) {
-          var coords = e.get("coords");
+          let coords = e.get("coords");
           myMap.balloon.open(coords, {
             contentHeader: "Event",
             contentBody:
@@ -635,8 +633,8 @@ class MainPage {
   }
 
   sendCoords(coords) {
-    var init = function() {
-      var myMap, myPlacemark;
+    let init = function() {
+      let myMap, myPlacemark;
 
       myMap = new ymaps.Map(`mapSend${coords[2]}`, {
         center: [coords[0], coords[1]],
