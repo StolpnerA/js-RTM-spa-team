@@ -11,6 +11,9 @@ class MainPage {
     this.onClickSelectLocationBinded = this.onClickSelectLocationBinded.bind(
       this
     );
+
+    this._coords = [];
+    ymaps.ready(this.sendCoordsOnMapInit.bind(this));
   }
 
   replaceMsg(text, count, name, img, placeMsg, messageUser) {
@@ -59,32 +62,30 @@ class MainPage {
         ? message.file.thumb_360
         : undefined;
     let isMyMessage = localStorage.getItem("user") == message.user;
-    let tplName = isMyMessage ? "myMsg" : "opponentMsg";
-    let tpl = readTemplate(tplName);
     let idUser = isMyMessage ? localStorage.getItem("user") : message.user;
     for (let i = 0; i < userInfo.members.length; i++) {
       if (userInfo.members[i].id == idUser) {
         name = userInfo.members[i].name;
         img = userInfo.members[i].profile.image_32;
       }
-      if (!isMyMessage) $$(".nameGroup").innerHTML = "@" + name;
+      //if (!isMyMessage) $$(".nameGroup").innerHTML = "@ " + name;
     }
     text = this.replaceMsg(text, message.ts, name, img, placeMsg, message.user);
     this.drawMsg(text, message.user, sendImg, placeMsg, name, img);
   }
 
   loadDirectMsg(choosingRoom) {
+    let that = this;
     let room = choosingRoom.join("");
     let token = localStorage.getItem("token");
     let placeMsg = $$(".workPlace");
-
     slackApi.readRoomMessages(room).then(data => {
       let leng = data.messages.length - 1;
       if (leng == -1) return;
       slackApi.userList(token).then(userInfo => {
         do {
           let message = data.messages[leng];
-          this.printMessages(userInfo, message, placeMsg);
+          that.printMessages(userInfo, message, placeMsg);
           leng = leng - 1;
         } while (leng >= 0);
       });
@@ -192,7 +193,6 @@ class MainPage {
   loadhistoryMessage() {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    let user = localStorage.getItem("user");
     let placeMsg = $$(".workPlace");
     let img, name;
     slackApi.channelsHistory(token, channel).then(data => {
@@ -201,43 +201,8 @@ class MainPage {
         placeMsg.innerHTML = "";
         if (leng == -1) return;
         do {
-          let text = data.messages[leng].text;
-          let sendImg =
-            data.messages[leng].file && data.messages[leng].file.thumb_360
-              ? data.messages[leng].file.thumb_360
-              : undefined;
-
-          if (localStorage.getItem("user") == data.messages[leng].user) {
-            for (let i = 0; i < userInfo.members.length; i++) {
-              if (userInfo.members[i].id == localStorage.getItem("user")) {
-                name = userInfo.members[i].name;
-                img = userInfo.members[i].profile.image_32;
-              }
-            }
-          } else {
-            for (let i = 0; i < userInfo.members.length; i++) {
-              if (userInfo.members[i].id == data.messages[leng].user) {
-                name = userInfo.members[i].name;
-                img = userInfo.members[i].profile.image_32;
-              }
-            }
-          }
-          text = this.replaceMsg(
-            text,
-            leng,
-            name,
-            img,
-            placeMsg,
-            data.messages[leng].user
-          );
-          this.drawMsg(
-            text,
-            data.messages[leng].user,
-            sendImg,
-            placeMsg,
-            name,
-            img
-          );
+          let message = data.messages[leng];
+          this.printMessages(userInfo, message, placeMsg);
           leng = leng - 1;
         } while (leng >= 0);
         placeMsg.scrollTop = placeMsg.scrollHeight;
@@ -276,7 +241,7 @@ class MainPage {
       .then(data => {
         for (let i = 0; i < data.channels.length; i++) {
           if (data.channels[i].id == localStorage.getItem("channel")) {
-            nameGroup.innerHTML = data.channels[i].name_normalized;
+            nameGroup.innerHTML = `# ${data.channels[i].name_normalized}`;
           }
           if (data.channels[i].is_archived != false) continue;
           let tpl = readTemplate("channelsList");
@@ -612,6 +577,8 @@ class MainPage {
         zoom: 7,
         controls: []
       });
+      return console.log("sendCoords", coords);
+
       myPlacemark = new ymaps.Placemark([coords[0], coords[1]], {
         balloonContent: "Я тут!"
       });
@@ -619,7 +586,11 @@ class MainPage {
       myMap.geoObjects.add(myPlacemark);
     };
 
-    ymaps.Map ? init() : ymaps.ready(init);
+    ymaps.Map ? init() : this._coords.push(coords);
+  }
+
+  sendCoordsOnMapInit() {
+    (this._coords || []).forEach(coords => this.sendCoords(coords));
   }
 
   onFileSelect(ev) {
