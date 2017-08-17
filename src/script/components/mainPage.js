@@ -4,7 +4,11 @@ import RenderTemplate from "../utils/RenderTemplate";
 let slackApi = new SlackApi();
 let rendertpl = new RenderTemplate();
 
-class mainPage {
+class MainPage {
+  constructor() {
+    this.onClickSelectLocationBinded = this.onClickSelectLocationBinded.bind(this);
+  }
+
   check() {
     if (localStorage.getItem("token")) {
       localStorage.getItem("channel") ||
@@ -542,20 +546,29 @@ class mainPage {
     });
   }
 
-  HandlerMenuChatBtn() {
-    let btn = document.querySelector(".menuChat");
+  getDialogForChat() {
     let dialogInfoChat = document.querySelector("#dialogForChat");
     if (!dialogInfoChat.showModal) {
       dialogPolyfill.registerDialog(dialogInfoChat);
     }
+    return dialogInfoChat;
+  }
+
+  onClickSelectLocationBinded() {
+      let dialogInfoChat = this.getDialogForChat();
+      this.GetLocation();
+      dialogInfoChat.close();
+  }
+
+  HandlerMenuChatBtn() {
+    let btn = document.querySelector(".menuChat");
+    let dialogInfoChat = this.getDialogForChat();
     btn.addEventListener("click", () => {
       dialogInfoChat.showModal();
       let location = dialogInfoChat.querySelector(".location");
       let senFile = dialogInfoChat.querySelector("#file-select");
-      location.addEventListener("click", () => {
-        this.GetLocation();
-        dialogInfoChat.close();
-      });
+      location.removeEventListener('click', this.onClickSelectLocationBinded);
+      location.addEventListener('click', this.onClickSelectLocationBinded);
       senFile.addEventListener("click", () => {
         this.attachFile();
         dialogInfoChat.close();
@@ -684,4 +697,4 @@ class mainPage {
   }
 }
 
-export default mainPage;
+export default MainPage;
