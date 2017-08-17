@@ -1,8 +1,7 @@
 import SlackApi from "../utils/SlackAPI";
-import RenderTemplate from "../utils/RenderTemplate";
+import { compileTpl } from "../utils/RenderTemplate";
 
 let slackApi = new SlackApi();
-let rendertpl = new RenderTemplate();
 
 let $$ = str => document.querySelector(str);
 let readTemplate = str => $$(`#${str}`).innerHTML;
@@ -28,7 +27,7 @@ class MainPage {
       if (!isMyMessage) $$(".nameGroup").innerHTML = "@" + name;
     }
 
-    placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+    placeMsg.innerHTML += compileTpl(tpl, {
       name: name,
       img: img,
       text: text
@@ -86,13 +85,13 @@ class MainPage {
           } else if (choosingRoom[0] == "C") {
             this.loadhistoryMessage();
           }
-        })
-        .then(this.loadUsers())
-        .then(this.channelList())
-        .then(this.wsMsg())
-        .then(this.exit())
-        .then(this.HandlerMenuChatBtn())
-        .then(this.GetYandexMap());
+        });
+      this.loadUsers();
+      this.channelList();
+      this.wsMsg();
+      this.exit();
+      this.HandlerMenuChatBtn();
+      this.GetYandexMap();
     } else {
       slackApi
         .oAuthAccess()
@@ -170,13 +169,14 @@ class MainPage {
             '<a href="$1" target="_blank">$1</a>'
           );
           if (text.indexOf("&lt;map&gt;") == 0) {
-            text = text.split("&lt;map&gt;");
-            text = text.splice(1, 11).join(",");
-            text = text.split(",");
+            text = text.split("&lt;map&gt;").splice(1, 11).join(",").split(",");
             text.push(leng);
-            let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
+            let div = `<div id="mapSend${`${leng}`.replace(
+              ".",
+              ""
+            )}" style="width: 100%; height: 200px"></div>`;
             let tpl = document.getElementById("myMsg").innerHTML;
-            placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+            placeMsg.innerHTML += compileTpl(tpl, {
               name: name,
               img: img,
               text: div
@@ -197,14 +197,14 @@ class MainPage {
                 let sendImg = data.messages[leng].file.thumb_360;
                 let text = `<img src="${sendImg}">`;
                 let tpl = document.getElementById("myMsg").innerHTML;
-                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                placeMsg.innerHTML += compileTpl(tpl, {
                   name: name,
                   img: img,
                   text: text
                 });
               } else {
                 let tpl = document.getElementById("myMsg").innerHTML;
-                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                placeMsg.innerHTML += compileTpl(tpl, {
                   name: name,
                   img: img,
                   text: text
@@ -224,14 +224,14 @@ class MainPage {
                 let sendImg = data.messages[leng].file.thumb_360;
                 let text = `<img src="${sendImg}">`;
                 let tpl = document.getElementById("opponentMsg").innerHTML;
-                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                placeMsg.innerHTML += compileTpl(tpl, {
                   name: name,
                   img: img,
                   text: text
                 });
               } else {
                 let tpl = document.getElementById("opponentMsg").innerHTML;
-                placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                placeMsg.innerHTML += compileTpl(tpl, {
                   name: name,
                   img: img,
                   text: text
@@ -258,7 +258,7 @@ class MainPage {
           userName = data.members[i].name;
           img = data.members[i].profile.image_32;
           let tpl = readTemplate("contacts");
-          divContacts.innerHTML += rendertpl.compileTpl(tpl, {
+          divContacts.innerHTML += compileTpl(tpl, {
             userId: userId,
             userName: userName,
             img: img
@@ -281,7 +281,7 @@ class MainPage {
           }
           if (data.channels[i].is_archived != false) continue;
           let tpl = readTemplate("channelsList");
-          divChannels.innerHTML += rendertpl.compileTpl(tpl, {
+          divChannels.innerHTML += compileTpl(tpl, {
             channelId: data.channels[i].id,
             channelName: data.channels[i].name
           });
@@ -293,7 +293,7 @@ class MainPage {
   renderNewChannel(typeMessage) {
     let divChannels = $$(".channels");
     let tpl = readTemplate("channelsList");
-    divChannels.innerHTML += rendertpl.compileTpl(tpl, {
+    divChannels.innerHTML += compileTpl(tpl, {
       channelId: typeMessage.channel.id,
       channelName: typeMessage.channel.name
     });
@@ -312,9 +312,12 @@ class MainPage {
       text = text.split(",");
       text.push(count);
 
-      let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
+      let div = `<div id="mapSend${`${count}`.replace(
+        ".",
+        ""
+      )}" style="width: 100%; height: 200px"></div>`;
       let tpl = readTemplate("myMsg");
-      placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+      placeMsg.innerHTML += compileTpl(tpl, {
         name: name,
         img: img,
         text: div
@@ -355,7 +358,7 @@ class MainPage {
         sendImg && sendImg.thumb_360
           ? `<img src="${sendImg.thumb_360}">`
           : text;
-      placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+      placeMsg.innerHTML += compileTpl(tpl, {
         name: name,
         img: img,
         text: text
@@ -365,27 +368,28 @@ class MainPage {
   }
 
   wsMsg() {
-    let ur, message;
+    let ur;
     let token = localStorage.getItem("token");
     slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
       let ws = new WebSocket(`${ur}`);
-      let that = this;
       ws.onopen = function() {};
-      ws.onmessage = function(event) {
-        let typeMessage = JSON.parse(event.data);
-        if (typeMessage.type == "channel_archive") {
-          that.removeChannelDOM(typeMessage);
-        }
-        if (typeMessage.type == "channel_created") {
-          that.renderNewChannel(typeMessage);
-        }
-        if (typeMessage.type == "message") {
-          message = JSON.parse(event.data);
-          if (localStorage.getItem("channel") != message.channel) return;
-          that.renderMsg(message, token);
-        }
-      };
+      ws.onmessage = this.onWsMessage.bind(this);
     });
+  }
+
+  onWsMessage(event) {
+    let message;
+    let token = localStorage.getItem("token");
+    let typeMessage = JSON.parse(event.data);
+    if (typeMessage.type === "channel_archive") {
+      this.removeChannelDOM(typeMessage);
+    } else if (typeMessage.type === "channel_created") {
+      this.renderNewChannel(typeMessage);
+    } else if (typeMessage.type === "message") {
+      message = JSON.parse(event.data);
+      if (localStorage.getItem("channel") !== message.channel) return;
+      this.renderMsg(message, token);
+    }
   }
 
   heandlerChannelsClick(divChannels) {
@@ -447,7 +451,7 @@ class MainPage {
                           }
                         }
                         let tpl = document.getElementById("myMsg").innerHTML;
-                        placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                        placeMsg.innerHTML += compileTpl(tpl, {
                           name: name,
                           img: img,
                           text: text
@@ -463,7 +467,7 @@ class MainPage {
                         }
                         let tpl = document.getElementById("opponentMsg")
                           .innerHTML;
-                        placeMsg.innerHTML += rendertpl.compileTpl(tpl, {
+                        placeMsg.innerHTML += compileTpl(tpl, {
                           name: name,
                           img: img,
                           text: text
@@ -605,6 +609,7 @@ class MainPage {
       );
       $$("#map").addEventListener("click", ev => {
         if (!ev.target.matches(".sendCoords")) return;
+
         /*СПРОСИТЬ У ВАСИЛИЯ  ЧТО ПРОВЕРЯЕТ УСЛОВИЕ*/
         if (myMap.balloon && myMap.balloon.onSendCoordsClick) {
           myMap.balloon.onSendCoordsClick();
@@ -616,8 +621,7 @@ class MainPage {
           myMap.balloon.open(coords, {
             contentHeader: "Event",
             contentBody:
-              "<p>Data to send.</p>" +
-              "<p>This coordinates: " +
+              "<p>Data to send.</p><p>This coordinates: " +
               [coords[0].toPrecision(6), coords[1].toPrecision(6)].join(", ") +
               "</p>" +
               `<button class="sendCoords">Send this coordinates</button>`
@@ -637,22 +641,24 @@ class MainPage {
   }
 
   sendCoords(coords) {
-    ymaps.ready(init);
-    var myMap, myPlacemark;
+    var init = function() {
+      var myMap, myPlacemark;
 
-    function init() {
-      myMap = new ymaps.Map(`mapSend${coords[2]}`, {
+      myMap = new ymaps.Map(`mapSend${`${coords[2]}`.replace(".", "")}`, {
         center: [coords[0], coords[1]],
         zoom: 7,
         controls: []
       });
+      console.log(`mapSend${coords[2]}`, myMap);
 
       myPlacemark = new ymaps.Placemark([coords[0], coords[1]], {
         balloonContent: "Я тут!"
       });
 
       myMap.geoObjects.add(myPlacemark);
-    }
+    };
+
+    ymaps.Map ? init() : ymaps.ready(init);
   }
 
   onFileSelect(ev) {
