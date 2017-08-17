@@ -171,10 +171,7 @@ class MainPage {
           if (text.indexOf("&lt;map&gt;") == 0) {
             text = text.split("&lt;map&gt;").splice(1, 11).join(",").split(",");
             text.push(leng);
-            let div = `<div id="mapSend${`${leng}`.replace(
-              ".",
-              ""
-            )}" style="width: 100%; height: 200px"></div>`;
+            let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
             let tpl = document.getElementById("myMsg").innerHTML;
             placeMsg.innerHTML += compileTpl(tpl, {
               name: name,
@@ -312,10 +309,7 @@ class MainPage {
       text = text.split(",");
       text.push(count);
 
-      let div = `<div id="mapSend${`${count}`.replace(
-        ".",
-        ""
-      )}" style="width: 100%; height: 200px"></div>`;
+      let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
       let tpl = readTemplate("myMsg");
       placeMsg.innerHTML += compileTpl(tpl, {
         name: name,
@@ -644,13 +638,11 @@ class MainPage {
     var init = function() {
       var myMap, myPlacemark;
 
-      myMap = new ymaps.Map(`mapSend${`${coords[2]}`.replace(".", "")}`, {
+      myMap = new ymaps.Map(`mapSend${coords[2]}`, {
         center: [coords[0], coords[1]],
         zoom: 7,
         controls: []
       });
-      console.log(`mapSend${coords[2]}`, myMap);
-
       myPlacemark = new ymaps.Placemark([coords[0], coords[1]], {
         balloonContent: "Я тут!"
       });
