@@ -7,7 +7,7 @@ let rendertpl = new RenderTemplate();
 let $$ = str => document.querySelector(str);
 let readTemplate = str => $$(`#${str}`).innerHTML;
 
-class mainPage {
+class MainPage {
   constructor() {
     this.onClickSelectLocationBinded = this.onClickSelectLocationBinded.bind(
       this
@@ -682,4 +682,4 @@ class mainPage {
   }
 }
 
-export default mainPage;
+export default MainPage;
