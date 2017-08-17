@@ -8,6 +8,11 @@ let $$ = str => document.querySelector(str);
 let readTemplate = str => $$(`#${str}`).innerHTML;
 
 class mainPage {
+  constructor() {
+    this.onClickSelectLocationBinded = this.onClickSelectLocationBinded.bind(
+      this
+    );
+  }
   printMessages(userInfo, message, placeMsg) {
     let name, img;
     let text = message.text;
@@ -364,20 +369,20 @@ class mainPage {
     let token = localStorage.getItem("token");
     slackApi.rtmConnect(token, ur).then(data => (ur = data.url)).then(() => {
       let ws = new WebSocket(`${ur}`);
-      let globalThis = this;
+      let that = this;
       ws.onopen = function() {};
       ws.onmessage = function(event) {
         let typeMessage = JSON.parse(event.data);
         if (typeMessage.type == "channel_archive") {
-          globalThis.removeChannelDOM(typeMessage);
+          that.removeChannelDOM(typeMessage);
         }
         if (typeMessage.type == "channel_created") {
-          globalThis.renderNewChannel(typeMessage);
+          that.renderNewChannel(typeMessage);
         }
         if (typeMessage.type == "message") {
           message = JSON.parse(event.data);
           if (localStorage.getItem("channel") != message.channel) return;
-          globalThis.renderMsg(message, token);
+          that.renderMsg(message, token);
         }
       };
     });
@@ -528,20 +533,29 @@ class mainPage {
     });
   }
 
-  HandlerMenuChatBtn() {
-    let btn = $$(".menuChat");
+  getDialogForChat() {
     let dialogInfoChat = $$("#dialogForChat");
     if (!dialogInfoChat.showModal) {
       dialogPolyfill.registerDialog(dialogInfoChat);
     }
+    return dialogInfoChat;
+  }
+
+  onClickSelectLocationBinded() {
+    let dialogInfoChat = this.getDialogForChat();
+    this.GetLocation();
+    dialogInfoChat.close();
+  }
+
+  HandlerMenuChatBtn() {
+    let btn = $$(".menuChat");
+    let dialogInfoChat = this.getDialogForChat();
     btn.addEventListener("click", () => {
       dialogInfoChat.showModal();
       let location = dialogInfoChat.querySelector(".location");
       let senFile = dialogInfoChat.querySelector("#file-select");
-      location.addEventListener("click", () => {
-        this.GetLocation();
-        dialogInfoChat.close();
-      });
+      location.removeEventListener("click", this.onClickSelectLocationBinded);
+      location.addEventListener("click", this.onClickSelectLocationBinded);
       senFile.addEventListener("click", () => {
         this.attachFile();
         dialogInfoChat.close();
@@ -641,29 +655,30 @@ class mainPage {
     }
   }
 
-  attachFile() {
+  onFileSelect(ev) {
     let token = localStorage.getItem("token");
     let channel = localStorage.getItem("channel");
-    var form = document.getElementById("myform");
-    var fileSelect = document.getElementById("file-select");
+    let file = ev.target.files[0];
+    let formData = new FormData();
+    formData.append("file", file, file.name);
+    formData.append("token", `${token}`);
+    formData.append("channels", `${channel}`);
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://slack.com/api/files.upload", true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        // File(s) uploaded.
+      } else {
+        alert("An error occurred!");
+      }
+    };
+    xhr.send(formData);
+  }
 
-    fileSelect.addEventListener("change", () => {
-      var file = fileSelect.files[0];
-      var formData = new FormData();
-      formData.append("file", file, file.name);
-      formData.append("token", `${token}`);
-      formData.append("channels", `${channel}`);
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "https://slack.com/api/files.upload", true);
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          // File(s) uploaded.
-        } else {
-          alert("An error occurred!");
-        }
-      };
-      xhr.send(formData);
-    });
+  attachFile() {
+    let fileSelect = document.getElementById("file-select");
+    fileSelect.removeEventListener("change", this.onFileSelect);
+    fileSelect.addEventListener("change", this.onFileSelect);
   }
 }
 
