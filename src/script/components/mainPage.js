@@ -12,9 +12,52 @@ class MainPage {
       this
     );
   }
+
+  replaceMsg(text, count, name, img, placeMsg, messageUser) {
+    text = text.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
+    if (text.indexOf("&lt;map&gt;") == 0) {
+      text = text.split("&lt;map&gt;");
+      text = text.splice(1, 11).join(",");
+      text = text.split(",");
+      text.push(count);
+
+      let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
+      let isMyMessage = localStorage.getItem("user") == messageUser;
+      let tplName = isMyMessage ? "myMsg" : "opponentMsg";
+      let tpl = readTemplate(tplName);
+      placeMsg.innerHTML += compileTpl(tpl, {
+        name: name,
+        img: img,
+        text: div
+      });
+
+      this.sendCoords(text);
+      text = undefined;
+      placeMsg.scrollTop = placeMsg.scrollHeight;
+    }
+    return text;
+  }
+
+  drawMsg(text, messageUser, sendImg, placeMsg, name, img) {
+    if (text == undefined) return;
+    let isMyMessage = localStorage.getItem("user") == messageUser;
+    let tplName = isMyMessage ? "myMsg" : "opponentMsg";
+    let tpl = readTemplate(tplName);
+    text = sendImg ? `<img src="${sendImg}">` : text;
+    placeMsg.innerHTML += compileTpl(tpl, {
+      name: name,
+      img: img,
+      text: text
+    });
+  }
+
   printMessages(userInfo, message, placeMsg) {
     let name, img;
     let text = message.text;
+    let sendImg =
+      message.file && message.file.thumb_360
+        ? message.file.thumb_360
+        : undefined;
     let isMyMessage = localStorage.getItem("user") == message.user;
     let tplName = isMyMessage ? "myMsg" : "opponentMsg";
     let tpl = readTemplate(tplName);
@@ -26,12 +69,8 @@ class MainPage {
       }
       if (!isMyMessage) $$(".nameGroup").innerHTML = "@" + name;
     }
-
-    placeMsg.innerHTML += compileTpl(tpl, {
-      name: name,
-      img: img,
-      text: text
-    });
+    text = this.replaceMsg(text, message.ts, name, img, placeMsg, message.user);
+    this.drawMsg(text, message.user, sendImg, placeMsg, name, img);
   }
 
   loadDirectMsg(choosingRoom) {
@@ -161,81 +200,44 @@ class MainPage {
         let leng = data.messages.length - 1;
         placeMsg.innerHTML = "";
         if (leng == -1) return;
-
         do {
           let text = data.messages[leng].text;
-          text = text.replace(
-            /<(http.+?)>/g,
-            '<a href="$1" target="_blank">$1</a>'
-          );
-          if (text.indexOf("&lt;map&gt;") == 0) {
-            text = text.split("&lt;map&gt;").splice(1, 11).join(",").split(",");
-            text.push(leng);
-            let div = `<div id="mapSend${leng}" style="width: 100%; height: 200px"></div>`;
-            let tpl = document.getElementById("myMsg").innerHTML;
-            placeMsg.innerHTML += compileTpl(tpl, {
-              name: name,
-              img: img,
-              text: div
-            });
-            this.sendCoords(text);
+          let sendImg =
+            data.messages[leng].file && data.messages[leng].file.thumb_360
+              ? data.messages[leng].file.thumb_360
+              : undefined;
+
+          if (localStorage.getItem("user") == data.messages[leng].user) {
+            for (let i = 0; i < userInfo.members.length; i++) {
+              if (userInfo.members[i].id == localStorage.getItem("user")) {
+                name = userInfo.members[i].name;
+                img = userInfo.members[i].profile.image_32;
+              }
+            }
           } else {
-            if (localStorage.getItem("user") == data.messages[leng].user) {
-              for (let i = 0; i < userInfo.members.length; i++) {
-                if (userInfo.members[i].id == localStorage.getItem("user")) {
-                  name = userInfo.members[i].name;
-                  img = userInfo.members[i].profile.image_32;
-                }
-              }
-              if (
-                data.messages[leng].file != undefined &&
-                data.messages[leng].file.thumb_360 != undefined
-              ) {
-                let sendImg = data.messages[leng].file.thumb_360;
-                let text = `<img src="${sendImg}">`;
-                let tpl = document.getElementById("myMsg").innerHTML;
-                placeMsg.innerHTML += compileTpl(tpl, {
-                  name: name,
-                  img: img,
-                  text: text
-                });
-              } else {
-                let tpl = document.getElementById("myMsg").innerHTML;
-                placeMsg.innerHTML += compileTpl(tpl, {
-                  name: name,
-                  img: img,
-                  text: text
-                });
-              }
-            } else {
-              for (let i = 0; i < userInfo.members.length; i++) {
-                if (userInfo.members[i].id == data.messages[leng].user) {
-                  name = userInfo.members[i].name;
-                  img = userInfo.members[i].profile.image_32;
-                }
-              }
-              if (
-                data.messages[leng].file != undefined &&
-                data.messages[leng].file.thumb_360 != undefined
-              ) {
-                let sendImg = data.messages[leng].file.thumb_360;
-                let text = `<img src="${sendImg}">`;
-                let tpl = document.getElementById("opponentMsg").innerHTML;
-                placeMsg.innerHTML += compileTpl(tpl, {
-                  name: name,
-                  img: img,
-                  text: text
-                });
-              } else {
-                let tpl = document.getElementById("opponentMsg").innerHTML;
-                placeMsg.innerHTML += compileTpl(tpl, {
-                  name: name,
-                  img: img,
-                  text: text
-                });
+            for (let i = 0; i < userInfo.members.length; i++) {
+              if (userInfo.members[i].id == data.messages[leng].user) {
+                name = userInfo.members[i].name;
+                img = userInfo.members[i].profile.image_32;
               }
             }
           }
+          text = this.replaceMsg(
+            text,
+            leng,
+            name,
+            img,
+            placeMsg,
+            data.messages[leng].user
+          );
+          this.drawMsg(
+            text,
+            data.messages[leng].user,
+            sendImg,
+            placeMsg,
+            name,
+            img
+          );
           leng = leng - 1;
         } while (leng >= 0);
         placeMsg.scrollTop = placeMsg.scrollHeight;
@@ -301,30 +303,6 @@ class MainPage {
     $$(`.channel_${channel}`).remove();
   }
 
-  replaceMsg(text, count, name, img, placeMsg, sound) {
-    text = text.replace(/<(http.+?)>/g, '<a href="$1" target="_blank">$1</a>');
-    if (text.indexOf("&lt;map&gt;") == 0) {
-      text = text.split("&lt;map&gt;");
-      text = text.splice(1, 11).join(",");
-      text = text.split(",");
-      text.push(count);
-
-      let div = `<div id="mapSend${count}" style="width: 100%; height: 200px"></div>`;
-      let tpl = readTemplate("myMsg");
-      placeMsg.innerHTML += compileTpl(tpl, {
-        name: name,
-        img: img,
-        text: div
-      });
-
-      this.sendCoords(text);
-      sound.play();
-      text = undefined;
-      placeMsg.scrollTop = placeMsg.scrollHeight;
-    }
-    return text;
-  }
-
   renderMsg(message, token) {
     // Костыль для бага с сообщениями, которые приходят непонятно от куда
     if (
@@ -335,28 +313,21 @@ class MainPage {
     }
     let placeMsg = $$(".workPlace");
     let sound = $$("#audio");
-    let sendImg = message.file;
+    let sendImg =
+      message.file && message.file.thumb_360
+        ? message.file.thumb_360
+        : undefined;
     let userName = message.user;
     slackApi.userInfo(token, userName).then(data => {
       if (data.user == undefined) return;
       let name = data.user.name;
       let img = data.user.profile.image_32;
       let text = message.text;
-      text = this.replaceMsg(text, message.ts, name, img, placeMsg, sound);
-      if (text == undefined) return;
-      let isMyMessage = localStorage.getItem("user") == message.user;
+      text = this.replaceMsg(text, message.ts, name, img, placeMsg, userName);
+      this.drawMsg(text, userName, sendImg, placeMsg, name, img);
+      let isMyMessage = localStorage.getItem("user") == userName;
       let tplName = isMyMessage ? "myMsg" : "opponentMsg";
-      if (tplName == "opponentMsg") sound.play();
-      let tpl = readTemplate(tplName);
-      text =
-        sendImg && sendImg.thumb_360
-          ? `<img src="${sendImg.thumb_360}">`
-          : text;
-      placeMsg.innerHTML += compileTpl(tpl, {
-        name: name,
-        img: img,
-        text: text
-      });
+      if (tplName === "opponentMsg") sound.play();
       placeMsg.scrollTop = placeMsg.scrollHeight;
     });
   }
