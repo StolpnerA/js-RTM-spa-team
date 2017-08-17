@@ -120,6 +120,9 @@ class MainPage {
             this.loadDirectMsg(choosingRoom);
           } else if (choosingRoom[0] == "C") {
             this.loadhistoryMessage();
+          } else if (choosingRoom[0] == "U") {
+            localStorage.setItem("channel", "C6CS9BNG3");
+            this.loadhistoryMessage();
           }
         });
       this.loadUsers();
@@ -339,13 +342,9 @@ class MainPage {
     let room;
     divContacts.addEventListener("click", e => {
       let target = e.target;
-      if (target.tagName == "SPAN" || target.tagName == "IMG") {
+      if (target.tagName != "SPAN" || target.tagName != "IMG") {
         let className = target.className;
         className = className.split("user_")[1];
-        localStorage.setItem(
-          "channel",
-          className.split("userName_")[0].slice(0, -1)
-        );
         let nameGroupTag = $$(".nameGroup");
         let channelName = className.split("userName_")[1];
         nameGroupTag.innerHTML = "@ " + channelName;
@@ -363,48 +362,15 @@ class MainPage {
                 if (leng != -1) {
                   slackApi.userList(token).then(userInfo => {
                     do {
-                      text = data.messages[leng].text;
-                      if (
-                        localStorage.getItem("user") == data.messages[leng].user
-                      ) {
-                        for (let i = 0; i < userInfo.members.length; i++) {
-                          if (
-                            userInfo.members[i].id ==
-                            localStorage.getItem("user")
-                          ) {
-                            name = userInfo.members[i].name;
-                            img = userInfo.members[i].profile.image_32;
-                          }
-                        }
-                        let tpl = document.getElementById("myMsg").innerHTML;
-                        placeMsg.innerHTML += compileTpl(tpl, {
-                          name: name,
-                          img: img,
-                          text: text
-                        });
-                      } else {
-                        for (let i = 0; i < userInfo.members.length; i++) {
-                          if (
-                            userInfo.members[i].id == data.messages[leng].user
-                          ) {
-                            name = userInfo.members[i].name;
-                            img = userInfo.members[i].profile.image_32;
-                          }
-                        }
-                        let tpl = document.getElementById("opponentMsg")
-                          .innerHTML;
-                        placeMsg.innerHTML += compileTpl(tpl, {
-                          name: name,
-                          img: img,
-                          text: text
-                        });
-                      }
+                      let message = data.messages[leng];
+                      this.printMessages(userInfo, message, placeMsg);
                       leng = leng - 1;
                     } while (leng >= 0);
                     placeMsg.scrollTop = placeMsg.scrollHeight;
                   });
                 }
               });
+              break;
             }
           }
         });
