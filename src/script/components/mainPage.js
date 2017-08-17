@@ -11,9 +11,6 @@ class MainPage {
     this.onClickSelectLocationBinded = this.onClickSelectLocationBinded.bind(
       this
     );
-
-    this._coords = [];
-    ymaps.ready(this.sendCoordsOnMapInit.bind(this));
   }
 
   replaceMsg(text, count, name, img, placeMsg, messageUser) {
@@ -75,7 +72,6 @@ class MainPage {
   }
 
   loadDirectMsg(choosingRoom) {
-    let that = this;
     let room = choosingRoom.join("");
     let token = localStorage.getItem("token");
     let placeMsg = $$(".workPlace");
@@ -85,7 +81,7 @@ class MainPage {
       slackApi.userList(token).then(userInfo => {
         do {
           let message = data.messages[leng];
-          that.printMessages(userInfo, message, placeMsg);
+          this.printMessages(userInfo, message, placeMsg);
           leng = leng - 1;
         } while (leng >= 0);
       });
@@ -198,7 +194,7 @@ class MainPage {
     slackApi.channelsHistory(token, channel).then(data => {
       slackApi.userList(token).then(userInfo => {
         let leng = data.messages.length - 1;
-        placeMsg.innerHTML = "";
+        placeMsg.innerHTML = " ";
         if (leng == -1) return;
         do {
           let message = data.messages[leng];
@@ -455,7 +451,8 @@ class MainPage {
     let nameGroupTag = $$(".nameGroup");
     let channelName = className.split("channelName_")[1];
     nameGroupTag.innerHTML = "# " + channelName;
-    slackApi.channelJoin(token, channelName).then(this.loadhistoryMessage());
+    slackApi.channelJoin(token, channelName);
+    this.loadhistoryMessage();
   }
 
   exit() {
@@ -577,7 +574,6 @@ class MainPage {
         zoom: 7,
         controls: []
       });
-      return console.log("sendCoords", coords);
 
       myPlacemark = new ymaps.Placemark([coords[0], coords[1]], {
         balloonContent: "Я тут!"
@@ -586,11 +582,7 @@ class MainPage {
       myMap.geoObjects.add(myPlacemark);
     };
 
-    ymaps.Map ? init() : this._coords.push(coords);
-  }
-
-  sendCoordsOnMapInit() {
-    (this._coords || []).forEach(coords => this.sendCoords(coords));
+    ymaps.Map ? init() : ymaps.ready(init);
   }
 
   onFileSelect(ev) {
