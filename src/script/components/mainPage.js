@@ -655,14 +655,8 @@ class mainPage {
     }
   }
 
-  attachFile() {
-    let token = localStorage.getItem("token");
-    let channel = localStorage.getItem("channel");
-    var form = document.getElementById("myform");
-    var fileSelect = document.getElementById("file-select");
-
-    fileSelect.addEventListener("change", () => {
-      var file = fileSelect.files[0];
+  onFileSelect(ev) {
+      var file = ev.target.files[0];
       var formData = new FormData();
       formData.append("file", file, file.name);
       formData.append("token", `${token}`);
@@ -677,7 +671,16 @@ class mainPage {
         }
       };
       xhr.send(formData);
-    });
+  }
+
+  attachFile() {
+    let token = localStorage.getItem("token");
+    let channel = localStorage.getItem("channel");
+    var form = document.getElementById("myform");
+    var fileSelect = document.getElementById("file-select");
+
+    fileSelect.removeEventListener('change', this.onFileSelect);
+    fileSelect.addEventListener('change', this.onFileSelect);
   }
 }
 
