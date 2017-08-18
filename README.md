@@ -20,12 +20,12 @@ gulp
 ## App structure
 ```
 .
-│   index.html
+├─── index.html
 │
-├───files
+├─── files
 │       sound.mp3
 │
-├───img
+├─── img
 │       android-icon-144x144.png
 │       android-icon-192x192.png
 │       android-icon-36x36.png
@@ -54,29 +54,29 @@ gulp
 │       ms-icon-70x70.png
 │       slackIcon.png
 │
-├───script
-│   │   app.js
-│   │
-│   ├───components
-│   │       indexPage.js
-│   │       mainPage.js
-│   │
-│   ├───routes
-│   │       index.js
-│   │       main.js
-│   │
-│   └───utils
+├─── script
+│    │   app.js
+│    │
+│    ├───components
+│    │       indexPage.js
+│    │       mainPage.js
+│    │
+│    ├───routes
+│    │       index.js
+│    │       main.js
+│    │
+│    └───utils
 │           eventBus.js
 │           RenderTemplate.js
 │           router.js
 │           SlackAPI.js
 │
-├───style
+├─── style
 │       browserconfig.xml
 │       main.css
 │       manifest.json
 │
-└───templates
+└─── templates
         channelsList.html
         contacts.html
         mainChat.html
