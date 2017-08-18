@@ -115,7 +115,7 @@ class MainPage {
   check() {
     if (localStorage.getItem("token")) {
       localStorage.getItem("channel") ||
-        localStorage.setItem("channel", "C6CS9BNG3");
+        localStorage.setItem("channel", "C0ESHJAKX");
 
       let token = this.readLocalToken();
       slackApi
@@ -131,7 +131,7 @@ class MainPage {
           } else if (choosingRoom[0] == "C") {
             this.loadhistoryMessage();
           } else if (choosingRoom[0] == "U") {
-            localStorage.setItem("channel", "C6CS9BNG3");
+            localStorage.setItem("channel", "C0ESHJAKX");
             this.loadhistoryMessage();
           }
         });
@@ -145,7 +145,7 @@ class MainPage {
       slackApi
         .oAuthAccess()
         .then(data => {
-          localStorage.setItem("channel", "C6CS9BNG3");
+          localStorage.setItem("channel", "C0ESHJAKX");
           let token = data.access_token;
           localStorage.setItem("token", `${token}`);
           localStorage.setItem("user", `${data.user_id}`);
@@ -414,7 +414,7 @@ class MainPage {
       .then(
         slackApi
           .channelLeave(token, className)
-          .then(localStorage.setItem("channel", "C6CS9BNG3"))
+          .then(localStorage.setItem("channel", "C0ESHJAKX"))
           .then(this.loadhistoryMessage())
       );
   }
