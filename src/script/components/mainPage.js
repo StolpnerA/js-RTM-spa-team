@@ -25,11 +25,16 @@ class MainPage {
       let isMyMessage = localStorage.getItem("user") == messageUser;
       let tplName = isMyMessage ? "myMsg" : "opponentMsg";
       let tpl = readTemplate(tplName);
-      placeMsg.innerHTML += compileTpl(tpl, {
+
+      let newMsgHtml = compileTpl(tpl, {
         name: name,
         img: img,
         text: div
       });
+      let newMsgHtmlDiv = document.createElement("div");
+      newMsgHtmlDiv.innerHTML = newMsgHtml;
+
+      placeMsg.appendChild(newMsgHtmlDiv);
 
       this.sendCoords(text);
       text = undefined;
@@ -44,11 +49,15 @@ class MainPage {
     let tplName = isMyMessage ? "myMsg" : "opponentMsg";
     let tpl = readTemplate(tplName);
     text = sendImg ? `<img src="${sendImg}">` : text;
-    placeMsg.innerHTML += compileTpl(tpl, {
+    let newMsgHtml = compileTpl(tpl, {
       name: name,
       img: img,
       text: text
     });
+    let newMsgHtmlDiv = document.createElement("div");
+    newMsgHtmlDiv.innerHTML = newMsgHtml;
+
+    placeMsg.appendChild(newMsgHtmlDiv);
   }
 
   printMessages(userInfo, message, placeMsg) {
@@ -94,7 +103,6 @@ class MainPage {
 
   readLocalToken() {
     let token = localStorage.getItem("token");
-
     if (token == "undefined") {
       localStorage.removeItem("token");
       localStorage.removeItem("channel");
@@ -110,7 +118,6 @@ class MainPage {
         localStorage.setItem("channel", "C6CS9BNG3");
 
       let token = this.readLocalToken();
-
       slackApi
         .checkTocken(token)
         .then(this.render())
@@ -271,7 +278,6 @@ class MainPage {
   }
 
   renderMsg(message, token) {
-    // Костыль для бага с сообщениями, которые приходят непонятно от куда
     if (
       message.ts == "1501544614.596385" ||
       message.ts == "1501796123.395835"
@@ -403,12 +409,14 @@ class MainPage {
 
   removeChannel(token, className) {
     className = className.split("channel_")[1];
-    slackApi.channelArchive(token, className).then(
-      slackApi
-        .channelLeave(token, className)
-        .then(localStorage.setItem("channel", "C6CS9BNG3")) // есть косяк, в других чатах не будет перезходить на general
-        .then(this.loadhistoryMessage())
-    );
+    slackApi
+      .channelArchive(token, className)
+      .then(
+        slackApi
+          .channelLeave(token, className)
+          .then(localStorage.setItem("channel", "C6CS9BNG3"))
+          .then(this.loadhistoryMessage())
+      );
   }
 
   joinChannel(token, className) {
@@ -468,6 +476,11 @@ class MainPage {
       });
   }
 
+  getDialogForSetMap() {
+    let dialogForSetMap = $$("#dialogForSetMap");
+    dialogForSetMap.close();
+  }
+
   getLocation() {
     let dialogForSetMap = $$("#dialogForSetMap");
     if (!dialogForSetMap.showModal) {
@@ -476,9 +489,10 @@ class MainPage {
     dialogForSetMap.showModal();
     dialogForSetMap
       .querySelector("button:not([disabled])")
-      .addEventListener("click", () => {
-        dialogForSetMap.close();
-      });
+      .removeEventListener("click", this.getDialogForSetMap);
+    dialogForSetMap
+      .querySelector("button:not([disabled])")
+      .addEventListener("click", this.getDialogForSetMap);
   }
 
   getYandexMap() {
@@ -535,9 +549,9 @@ class MainPage {
   }
 
   sendCoords(coords) {
-    ymaps.ready(init.bind(this));
+    //ymaps.ready(init.bind(this));
 
-    function init() {
+    let init = function() {
       let myMap, myPlacemark;
       myMap = new ymaps.Map(`mapSend${coords[2]}`, {
         center: [coords[0], coords[1]],
@@ -550,9 +564,8 @@ class MainPage {
       });
 
       myMap.geoObjects.add(myPlacemark);
-    }
-
-    // ymaps.Map ? init() : ymaps.ready(init.bind(this));
+    };
+    ymaps.Map ? init() : ymaps.ready(init.bind(this));
   }
 
   onFileSelect(ev) {
@@ -581,5 +594,4 @@ class MainPage {
     fileSelect.addEventListener("change", this.onFileSelect);
   }
 }
-
 export default MainPage;
