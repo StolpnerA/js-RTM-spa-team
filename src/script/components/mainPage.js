@@ -65,10 +65,12 @@ class MainPage {
         name = userInfo.members[i].name;
         img = userInfo.members[i].profile.image_32;
       }
-      //if (!isMyMessage) $$(".nameGroup").innerHTML = "@ " + name;
     }
     text = this.replaceMsg(text, message.ts, name, img, placeMsg, message.user);
     this.drawMsg(text, message.user, sendImg, placeMsg, name, img);
+    let arr = [];
+    arr.push(isMyMessage, name);
+    return arr;
   }
 
   loadDirectMsg(choosingRoom) {
@@ -81,7 +83,8 @@ class MainPage {
       slackApi.userList(token).then(userInfo => {
         do {
           let message = data.messages[leng];
-          this.printMessages(userInfo, message, placeMsg);
+          let arr = this.printMessages(userInfo, message, placeMsg);
+          if (!arr[0]) $$(".nameGroup").innerHTML = "@ " + arr[1];
           leng = leng - 1;
         } while (leng >= 0);
       });
@@ -342,7 +345,7 @@ class MainPage {
     let room;
     divContacts.addEventListener("click", e => {
       let target = e.target;
-      if (target.tagName != "SPAN" || target.tagName != "IMG") {
+      if (target.tagName == "SPAN" || target.tagName == "IMG") {
         let className = target.className;
         className = className.split("user_")[1];
         let nameGroupTag = $$(".nameGroup");
@@ -532,9 +535,10 @@ class MainPage {
   }
 
   sendCoords(coords) {
-    let init = function() {
-      let myMap, myPlacemark;
+    ymaps.ready(init.bind(this));
 
+    function init() {
+      let myMap, myPlacemark;
       myMap = new ymaps.Map(`mapSend${coords[2]}`, {
         center: [coords[0], coords[1]],
         zoom: 7,
@@ -546,9 +550,9 @@ class MainPage {
       });
 
       myMap.geoObjects.add(myPlacemark);
-    };
+    }
 
-    ymaps.Map ? init() : ymaps.ready(init);
+    // ymaps.Map ? init() : ymaps.ready(init.bind(this));
   }
 
   onFileSelect(ev) {
