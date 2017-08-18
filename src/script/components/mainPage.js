@@ -549,8 +549,6 @@ class MainPage {
   }
 
   sendCoords(coords) {
-    //ymaps.ready(init.bind(this));
-
     let init = function() {
       let myMap, myPlacemark;
       myMap = new ymaps.Map(`mapSend${coords[2]}`, {
