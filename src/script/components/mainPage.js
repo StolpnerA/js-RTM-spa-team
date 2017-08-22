@@ -1,5 +1,6 @@
 import SlackApi from "../utils/SlackAPI";
 import { compileTpl } from "../utils/RenderTemplate";
+import Emoji from "./emoji";
 
 let slackApi = new SlackApi();
 
@@ -11,6 +12,7 @@ class MainPage {
     this.onClickSelectLocationBinded = this.onClickSelectLocationBinded.bind(
       this
     );
+    this.emoji = new Emoji();
   }
 
   replaceMsg(text, count, name, img, placeMsg, messageUser) {
@@ -45,6 +47,7 @@ class MainPage {
 
   drawMsg(text, messageUser, sendImg, placeMsg, name, img) {
     if (text == undefined) return;
+    text = this.emoji.replaceTextToEmoji(text);
     let isMyMessage = localStorage.getItem("user") == messageUser;
     let tplName = isMyMessage ? "myMsg" : "opponentMsg";
     let tpl = readTemplate(tplName);
