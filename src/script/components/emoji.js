@@ -1,6 +1,5 @@
 class Emoji {
   replaceTextToEmoji(text) {
-    console.log(text);
     text = text.replace(
       /:grimacing:/g,
       `<img src="img/EmojiImg/grimacing-face.png" width="30px" height="30px">`
@@ -289,6 +288,10 @@ class Emoji {
       /:sweat_smile:/g,
       `<img src="img/EmojiImg/sweat_smile.png" width="30px" height="30px">`
     ); //sweat_smile
+    text = text.replace(
+      /:relieved:/g,
+      `<img src="img/EmojiImg/relieved.png" width="30px" height="30px">`
+    ); //relieved
 
     text = `<div>${text}</div>`;
     return text;
